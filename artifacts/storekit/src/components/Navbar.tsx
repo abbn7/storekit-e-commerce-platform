@@ -49,8 +49,10 @@ export default function Navbar() {
   return (
     <>
       <motion.nav
-        className={`fixed top-10 left-0 right-0 z-40 transition-colors duration-500 ${
-          isScrolled ? "bg-background/96 backdrop-blur-md border-b border-border/60" : "bg-transparent"
+        className={`fixed top-10 left-0 right-0 z-40 transition-all duration-500 ${
+          isScrolled
+            ? "bg-white/80 backdrop-blur-2xl saturate-150 border-b border-white/60 shadow-sm"
+            : "bg-transparent"
         }`}
         animate={{ y: isHidden ? -120 : 0 }}
         transition={{ duration: 0.4, ease: luxury }}
