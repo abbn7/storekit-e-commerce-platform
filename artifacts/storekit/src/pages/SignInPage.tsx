@@ -13,7 +13,7 @@ export default function SignInPage() {
             <p className="text-sm text-muted-foreground mt-2">Sign in to your account to continue</p>
           </div>
           <SignIn
-            afterSignInUrl="/"
+            fallbackRedirectUrl="/"
             appearance={{
               elements: {
                 rootBox: "w-full",

@@ -18,7 +18,7 @@ export default function AdminOrderDetailPage() {
 
   async function handleStatusChange(newStatus: string) {
     setUpdating(true);
-    await updateOrder.mutateAsync({ id: id!, data: { status: newStatus } });
+    await updateOrder.mutateAsync({ id: id!, data: { status: newStatus as any } });
     toast({ title: "Order updated" });
     refetch();
     setUpdating(false);

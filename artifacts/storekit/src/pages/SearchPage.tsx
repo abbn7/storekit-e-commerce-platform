@@ -18,7 +18,7 @@ export default function SearchPage() {
   }, [query]);
 
   const { data, isLoading } = useSearchProducts({ q: debouncedQ, pageSize: "24" } as any, {
-    query: { enabled: debouncedQ.length > 0 },
+    query: { enabled: debouncedQ.length > 0 } as any,
   });
 
   const products = data?.products ?? [];

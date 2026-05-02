@@ -26,7 +26,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const adminLogout = useAdminLogout();
 
   async function handleLogout() {
-    await adminLogout.mutateAsync({ data: undefined });
+    await adminLogout.mutateAsync();
     localStorage.removeItem("sk-admin-session");
     setLocation("/admin/login");
   }

@@ -53,7 +53,7 @@ function HeroSection({ config }: { config: any }) {
           <div className="max-w-2xl">
             <div className="overflow-hidden mb-6">
               <h1 className="font-display text-6xl sm:text-7xl lg:text-8xl font-light leading-[1.05] tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
-                {words.map((word, i) => (
+                {words.map((word: string, i: number) => (
                   <motion.span
                     key={i}
                     className="inline-block mr-4"

@@ -19,7 +19,7 @@ export default function AdminProductFormPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const { data: existing } = useAdminGetProduct(id ?? "", { query: { enabled: isEdit } });
+  const { data: existing } = useAdminGetProduct(id ?? "", { query: { enabled: isEdit } as any });
   const { data: collectionsData } = useAdminListCollections();
   const createProduct = useAdminCreateProduct();
   const updateProduct = useAdminUpdateProduct();
@@ -72,7 +72,7 @@ export default function AdminProductFormPage() {
       name, slug, description, shortDescription,
       basePrice: Math.round(parseFloat(basePrice) * 100),
       compareAtPrice: compareAtPrice ? Math.round(parseFloat(compareAtPrice) * 100) : undefined,
-      status, isFeatured, isNewArrival, material, careInstructions,
+      status: status as any, isFeatured, isNewArrival, material, careInstructions,
       collectionIds,
       tags: tags.split(",").map(t => t.trim()).filter(Boolean),
       images: images.filter(i => i.url),

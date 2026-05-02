@@ -18,7 +18,7 @@ const STATUS_COLORS: Record<string, string> = {
 function OrdersContent() {
   const { user } = useUser();
   const { data: orders, isLoading } = useGetUserOrders(user?.id ?? "", {
-    query: { enabled: !!user?.id },
+    query: { enabled: !!user?.id } as any,
   });
 
   return (

@@ -13,7 +13,7 @@ export default function SignUpPage() {
             <p className="text-sm text-muted-foreground mt-2">Join to unlock exclusive access and order tracking</p>
           </div>
           <SignUp
-            afterSignUpUrl="/"
+            fallbackRedirectUrl="/"
             appearance={{
               elements: {
                 rootBox: "w-full",
