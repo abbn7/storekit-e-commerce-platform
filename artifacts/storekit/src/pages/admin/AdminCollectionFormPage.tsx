@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import ImageUploadButton from "@/components/admin/ImageUploadButton";
 
 export default function AdminCollectionFormPage() {
   useAdminGuard();
@@ -64,22 +65,63 @@ export default function AdminCollectionFormPage() {
       <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
         <div className="bg-card border border-border p-6 space-y-4">
           <h2 className="text-sm font-medium tracking-wide">Collection Details</h2>
+
           <div className="space-y-1.5">
             <Label>Name *</Label>
             <Input value={name} onChange={e => { setName(e.target.value); if (!isEdit) setSlug(e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")); }} required />
           </div>
+
           <div className="space-y-1.5">
             <Label>Slug *</Label>
             <Input value={slug} onChange={e => setSlug(e.target.value)} required />
           </div>
+
           <div className="space-y-1.5">
             <Label>Description</Label>
             <Textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} />
           </div>
-          <div className="space-y-1.5">
-            <Label>Image URL</Label>
-            <Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://..." />
+
+          {/* Image section */}
+          <div className="space-y-3">
+            <Label>Collection Image</Label>
+
+            {/* Preview */}
+            {imageUrl && (
+              <div className="relative w-40 h-52 border border-border overflow-hidden">
+                <img
+                  src={imageUrl}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                  onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setImageUrl("")}
+                  className="absolute top-1.5 right-1.5 bg-foreground/80 text-background w-5 h-5 text-xs flex items-center justify-center hover:bg-foreground transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            {/* URL input */}
+            <div className="space-y-1.5">
+              <p className="text-xs text-muted-foreground">Paste a URL or upload from your device</p>
+              <Input
+                value={imageUrl}
+                onChange={e => setImageUrl(e.target.value)}
+                placeholder="https://..."
+                className="text-sm"
+              />
+            </div>
+
+            {/* Upload button */}
+            <ImageUploadButton
+              label="Upload from device"
+              onSuccess={(url) => setImageUrl(url)}
+            />
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Sort Order</Label>
@@ -92,12 +134,6 @@ export default function AdminCollectionFormPage() {
               </label>
             </div>
           </div>
-          {imageUrl && (
-            <div className="mt-2">
-              <p className="text-xs text-muted-foreground mb-2">Preview:</p>
-              <img src={imageUrl} alt="Preview" className="w-32 h-40 object-cover border border-border" />
-            </div>
-          )}
         </div>
 
         <div className="flex gap-3">

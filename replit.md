@@ -40,8 +40,8 @@ Full-stack luxury fashion e-commerce platform built as a pnpm workspace monorepo
 
 - `/` — Homepage (hero, featured products, collections, testimonials)
 - `/collections` — All collections grid
-- `/collections/:slug` — Collection detail with product grid + sort
-- `/products/:slug` — Product detail (size/color selector, add to cart/wishlist)
+- `/collections/:slug` — Collection detail with advanced filter panel (color, size, price range) + sort
+- `/products/:slug` — Product detail (size/color selector, Size Guide modal, social proof, recently viewed tracking, related products, add to cart/wishlist)
 - `/cart` — Cart page
 - `/checkout` — Checkout (Stripe)
 - `/order-confirmation/:id` — Order success
@@ -51,6 +51,18 @@ Full-stack luxury fashion e-commerce platform built as a pnpm workspace monorepo
 - `/account/wishlist` — Saved items
 - `/about` — About page
 - `/sign-in`, `/sign-up` — Clerk auth pages
+
+## Competitive Features (v2)
+
+- **Image Upload**: Admin forms support uploading images from device via Object Storage (presigned URL → GCS). `ImageUploadButton` component at `src/components/admin/ImageUploadButton.tsx`
+- **Advanced Collection Filtering**: Filter by color swatches, size buttons, and price ranges — client-side filtering on loaded products. Toggle panel with active filter count badge.
+- **Size Guide Modal**: Popup with XS–XL size chart (EU/UK/US conversions), CM/IN toggle, how-to-measure section. `SizeGuide` component next to size selector.
+- **Social Proof**: Live "X people viewing this" badge on product detail (deterministic from product ID). `SocialProof` sub-component.
+- **Recently Viewed**: Zustand persisted store (`sk-recently-viewed`) tracks last 8 viewed products. Shown at bottom of product detail pages. `RecentlyViewed` component + `useRecentlyViewedStore`.
+- **Related Products**: "You May Also Like" grid on product detail (same collection, max 4).
+- **Newsletter Popup**: Time-delayed (6s) email capture popup with 15% discount offer, 14-day dismissal, submit confirmation. `NewsletterPopup` component added to `App.tsx`.
+- **Back to Top**: Smooth scroll button appears after 500px scroll. `BackToTop` component in `App.tsx`.
+- **Object Storage**: Server routes at `/api/storage/uploads/request-url` (presigned URL), `/api/storage/objects/:id` (serve), `/api/storage/public-objects/*` (public). Inline Zod schemas (no codegen dependency).
 
 ## Admin Dashboard
 
@@ -62,6 +74,12 @@ Full-stack luxury fashion e-commerce platform built as a pnpm workspace monorepo
 - `/admin/settings` — Store CMS (General/Hero/Colors/Social/Content tabs)
 - `/admin/content` — Testimonials + content management
 - `/admin/analytics` — Charts + metrics (Recharts)
+
+## Codegen Notes
+
+- Run `cd lib/api-spec && pnpm exec orval --config ./orval.config.ts` to regenerate (without typecheck)
+- `lib/api-zod/src/index.ts` must only have `export * from "./generated/api"` — orval overwrites this to include `types` which creates duplicate exports; fix manually after each codegen run
+- `typecheck:libs` is expected to fail due to orval types duplication — this does NOT affect runtime
 
 ## i18n — Internationalization
 
