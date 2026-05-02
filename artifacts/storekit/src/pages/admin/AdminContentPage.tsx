@@ -6,7 +6,7 @@ import {
   useAdminListBanners, useAdminCreateBanner, useAdminUpdateBanner, useAdminDeleteBanner,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Star, MessageSquare, Image, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, Star, MessageSquare, Image, Eye, EyeOff, Mail, ExternalLink } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,9 +31,13 @@ export default function AdminContentPage() {
           <TabsTrigger value="banners" className="rounded-lg text-xs px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <Image className="w-3.5 h-3.5 mr-1.5" />Banners
           </TabsTrigger>
+          <TabsTrigger value="emails" className="rounded-lg text-xs px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Mail className="w-3.5 h-3.5 mr-1.5" />Email Templates
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="testimonials"><TestimonialsTab /></TabsContent>
         <TabsContent value="banners"><BannersTab /></TabsContent>
+        <TabsContent value="emails"><EmailTab /></TabsContent>
       </Tabs>
     </AdminLayout>
   );
@@ -312,6 +316,89 @@ function BannersTab() {
           </form>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════
+   EMAIL TEMPLATES
+════════════════════════════════════════════════════════════════ */
+function EmailTab() {
+  return (
+    <div className="space-y-6">
+      <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex gap-3">
+        <Mail className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Automatic Order Confirmations</p>
+          <p className="text-xs text-blue-700 dark:text-blue-300 mt-1 leading-relaxed">
+            When a customer places an order and provides their email at checkout, a branded confirmation is sent automatically.
+            In development, emails are captured by Ethereal — check the API server logs for a preview link.
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-border bg-muted/30 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">Order Confirmation</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Sent immediately after a successful order</p>
+          </div>
+          <a
+            href="/api/admin/email-preview/order-confirmation"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs tracking-[0.1em] uppercase border border-border px-3 py-1.5 hover:bg-muted transition-colors"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            Preview Email
+          </a>
+        </div>
+        <div className="p-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: "Brand header",    value: "Dark luxury header with store name" },
+              { label: "Order details",   value: "Number, date, items with images" },
+              { label: "Cost breakdown",  value: "Subtotal, shipping, tax, total" },
+              { label: "Ship address",    value: "Full delivery address + ETA" },
+            ].map(f => (
+              <div key={f.label} className="bg-muted/40 rounded-lg p-3">
+                <p className="text-[10px] tracking-[0.1em] uppercase text-muted-foreground font-medium mb-1">{f.label}</p>
+                <p className="text-xs text-foreground leading-snug">{f.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-border bg-muted/30">
+          <p className="text-sm font-medium">SMTP Configuration</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Set these environment secrets to deliver real emails</p>
+        </div>
+        <div className="p-5 space-y-2">
+          {[
+            { key: "SMTP_HOST",   ex: "smtp.sendgrid.net",               desc: "SMTP server hostname" },
+            { key: "SMTP_PORT",   ex: "587",                              desc: "587 for TLS · 465 for SSL" },
+            { key: "SMTP_USER",   ex: "apikey",                           desc: "SMTP username" },
+            { key: "SMTP_PASS",   ex: "SG.xxxx…",                        desc: "Password or API key" },
+            { key: "SMTP_FROM",   ex: '"Store" <orders@store.com>',       desc: "Sender display name + address" },
+            { key: "SMTP_SECURE", ex: "false",                            desc: "true if using port 465 (SSL)" },
+            { key: "STORE_URL",   ex: "https://mystore.replit.app",       desc: "Production store URL for links" },
+          ].map(item => (
+            <div key={item.key} className="flex items-start gap-3 py-2 border-b border-border/40 last:border-0">
+              <code className="text-xs bg-muted px-2 py-1 font-mono flex-shrink-0 min-w-[130px]">{item.key}</code>
+              <div>
+                <p className="text-xs text-muted-foreground">{item.desc}</p>
+                <p className="text-[11px] text-foreground/40 font-mono mt-0.5">{item.ex}</p>
+              </div>
+            </div>
+          ))}
+          <p className="mt-3 text-xs text-muted-foreground bg-muted/40 rounded-lg p-3">
+            Compatible with SendGrid, Resend, Mailgun, Postmark, Gmail, or any SMTP server.
+            Without SMTP config, emails go to a free Ethereal test inbox — preview URL appears in API server logs.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

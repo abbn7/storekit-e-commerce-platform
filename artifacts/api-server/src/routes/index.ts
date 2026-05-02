@@ -18,6 +18,7 @@ import adminSettingsRouter from "./admin/settings";
 import adminAnalyticsRouter from "./admin/analytics";
 import adminContentRouter from "./admin/content";
 import adminLookbookRouter from "./admin/lookbook";
+import adminEmailPreviewRouter from "./admin/email-preview";
 
 const router: IRouter = Router();
 
@@ -42,5 +43,6 @@ router.use("/admin/settings", adminSettingsRouter);
 router.use("/admin/analytics", adminAnalyticsRouter);
 router.use("/admin/content", adminContentRouter);
 router.use("/admin/lookbook", adminLookbookRouter);
+router.use("/admin/email-preview", adminEmailPreviewRouter);
 
 export default router;

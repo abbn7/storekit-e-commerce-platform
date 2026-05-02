@@ -8,6 +8,7 @@ import {
   productsTable,
 } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import { sendOrderConfirmation } from "../lib/email";
 
 const router = Router();
 
@@ -132,7 +133,29 @@ router.post("/", async (req, res): Promise<void> => {
       }
     }
 
-    res.status(201).json(await mapOrder(order));
+    const mapped = await mapOrder(order);
+
+    // Send confirmation email in background (non-blocking)
+    const addr = shippingAddress as { email?: string; fullName: string; line1: string; line2?: string; city: string; state: string; postalCode: string; country: string; };
+    const customerEmail = addr.email;
+    if (customerEmail) {
+      sendOrderConfirmation(
+        {
+          orderNumber: order.orderNumber,
+          createdAt: order.createdAt.toISOString(),
+          items: resolvedItems.map(i => ({ productName: i.productName, variantLabel: i.variantLabel, imageUrl: i.imageUrl, quantity: i.quantity, price: i.price, total: i.price * i.quantity })),
+          shippingAddress: addr,
+          subtotal,
+          shippingCost,
+          tax,
+          total,
+          trackingNumber: null,
+        },
+        customerEmail,
+      ).catch(() => {});
+    }
+
+    res.status(201).json(mapped);
   } catch (err) {
     req.log.error({ err }, "Failed to create order");
     res.status(500).json({ error: "Internal server error" });

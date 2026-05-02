@@ -68,6 +68,7 @@ function CheckoutContent() {
           items: items.map(i => ({ variantId: i.variantId, quantity: i.quantity })),
           shippingAddress: {
             fullName: shipping.fullName,
+            email: shipping.email || undefined,
             line1: shipping.line1,
             line2: shipping.line2 || undefined,
             city: shipping.city,
