@@ -1,0 +1,1777 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║            STOREKIT — FULL BUILD PROMPT v3.0                            ║
+║   White-Label Fashion E-Commerce | World-Class Frontend Edition         ║
+║   One-Command Deploy: GitHub → Vercel → Done ✓                         ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CRITICAL RULES — READ BEFORE WRITING A SINGLE LINE OF CODE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RULE 1 — THIS PROMPT IS THE SPEC.
+Do NOT generate spec.md / plan.md / constitution.md / task files.
+Skip all “spec-kit” phases entirely. Start directly with code.
+
+RULE 2 — SCAFFOLD FIRST, BUILD SECOND.
+Never write from scratch what already exists:
+→ Shadcn/UI components: install via CLI, never hand-write them
+→ Clerk auth UI: use <SignIn /> and <SignUp /> directly, don’t build forms
+→ Admin layout: use shadcn sidebar block as base
+→ Email templates: adapt React Email base templates, don’t write raw HTML
+
+RULE 3 — INTERFACES ARE FROZEN.
+All TypeScript types are defined in this prompt.
+Copy them EXACTLY. Never alter, rename, or extend them.
+
+RULE 4 — SCHEMA IS FROZEN.
+All SQL is defined in this prompt.
+Copy it EXACTLY. Never alter column names or types.
+
+RULE 5 — ADMIN AUTH IS PASSWORD-ONLY.
+Admin dashboard (/admin/*) is protected by ADMIN_PASSWORD from .env ONLY.
+No Clerk roles. No middleware magic.
+Store a session cookie on correct password. Clear it on logout.
+If cookie missing or wrong → redirect to /admin/login.
+
+RULE 6 — API RESPONSE ENVELOPE.
+Every single API route returns this shape and nothing else:
+{ “data”: T | null, “error”: string | null, “meta”?: { total, page, pageSize } }
+
+RULE 7 — BUILD MUST PASS.
+After completing each STEP below, run: pnpm build
+Fix ALL TypeScript and lint errors before moving to next step.
+
+RULE 8 — WORLD-CLASS FRONTEND.
+The storefront must look and feel indistinguishable from a Shopify Plus /
+luxury brand store. Every pixel intentional. No generic AI aesthetics.
+Reference: Jacquemus, Bottega Veneta, Arc’teryx, Allbirds storefronts.
+Every interaction must have micro-feedback. Skeleton loaders everywhere.
+Hover states that surprise. Scroll-triggered reveals.
+
+RULE 9 — ONE-COMMAND DEPLOY.
+The project MUST work with: push to GitHub → import to Vercel →
+paste env vars → Deploy. ZERO manual config steps beyond env vars.
+vercel.json must be included. All edge cases handled automatically.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ROLE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You are a Senior Full-Stack Engineer AND a world-class UI/UX Designer.
+You will build StoreKit: a complete white-label fashion e-commerce platform.
+One Next.js project. Full storefront + backend + admin.
+This is a TEMPLATE — zero hardcoded brand data. Everything comes
+from the database via /api/store-config.
+
+The frontend must rival Shopify’s best themes (Dawn, Prestige, Impulse).
+Study: editorial layouts, immersive product photography presentation,
+frictionless UX flows, mobile-first gesture interactions.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TECH STACK (NON-NEGOTIABLE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Framework     Next.js 15 — App Router — TypeScript strict mode
+Styling       Tailwind CSS v4 + Shadcn/UI
+Auth (store)  Clerk (@clerk/nextjs) — built-in components only
+Auth (admin)  Password from .env → session cookie → done
+Database      Supabase (PostgreSQL)
+ORM           Drizzle ORM + drizzle-kit
+Payments      Stripe + @stripe/react-stripe-js
+Images        Cloudinary — next-cloudinary (CldImage only)
+Email         Resend + React Email
+State         Zustand (cart, wishlist, UI)
+Forms         React Hook Form + Zod
+Animations    Framer Motion v11
+Icons         Lucide React
+Fonts         next/font — Cormorant Garamond (display) + Inter (body)
++ Bebas Neue (for accent headings / numbers / stats)
+Package Mgr   pnpm  |  Node >= 20
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 1 — SCAFFOLD (run these commands first, no code yet)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+```bash
+pnpm create next-app@latest storekit \
+  --typescript --tailwind --app --src-dir --import-alias "@/*"
+cd storekit
+
+# Init Shadcn
+pnpm dlx shadcn@latest init
+pnpm dlx shadcn@latest add \
+  button card input label select badge dialog drawer sheet \
+  tabs accordion table form checkbox radio-group skeleton toast \
+  avatar separator dropdown-menu navigation-menu breadcrumb \
+  progress popover command carousel scroll-area aspect-ratio \
+  toggle toggle-group slider hover-card tooltip
+
+# All production dependencies
+pnpm add \
+  @clerk/nextjs \
+  @supabase/supabase-js \
+  drizzle-orm \
+  @stripe/stripe-js stripe @stripe/react-stripe-js \
+  next-cloudinary cloudinary \
+  @resend/node react-email \
+  zustand zod react-hook-form @hookform/resolvers \
+  framer-motion lucide-react next-themes \
+  recharts react-dropzone react-colorful \
+  cookies-next \
+  @tanstack/react-table \
+  embla-carousel-react \
+  embla-carousel-autoplay \
+  react-intersection-observer \
+  @radix-ui/react-visually-hidden \
+  sharp
+
+# Dev
+pnpm add -D drizzle-kit
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 2 — ENVIRONMENT VARIABLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Create .env.local.example (copy as .env.local and fill values):
+
+```env
+# ── SUPABASE ──────────────────────────────────────
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# ── CLERK (storefront users only) ─────────────────
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxx
+CLERK_SECRET_KEY=sk_test_xxxx
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
+
+# ── CLOUDINARY ────────────────────────────────────
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# ── STRIPE ────────────────────────────────────────
+STRIPE_SECRET_KEY=sk_test_xxxx
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxx
+
+# ── RESEND ────────────────────────────────────────
+RESEND_API_KEY=re_xxxx
+
+# ── APP ───────────────────────────────────────────
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# ── ADMIN (simple password auth) ──────────────────
+ADMIN_PASSWORD=choose_a_strong_password_here
+ADMIN_SESSION_SECRET=random_32_char_string_here
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 3 — TYPESCRIPT INTERFACES (copy exactly into /src/types/)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+— /src/types/api.ts —
+
+```typescript
+export interface ApiResponse<T> {
+  data: T | null;
+  error: string | null;
+  meta?: { total: number; page: number; pageSize: number };
+}
+```
+
+— /src/types/store-config.ts —
+
+```typescript
+export interface StoreConfig {
+  id: string;
+  storeName: string;
+  storeTagline: string;
+  logoPublicId: string;
+  faviconPublicId: string;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  currency: string;
+  currencySymbol: string;
+  locale: string;
+  socialLinks: {
+    instagram?: string;
+    facebook?: string;
+    tiktok?: string;
+    twitter?: string;
+  };
+  contactEmail: string;
+  shippingThreshold: number;
+  returnPolicy: string;
+  aboutText: string;
+  heroHeading: string;
+  heroSubheading: string;
+  heroImagePublicId: string;
+}
+```
+
+— /src/types/product.ts —
+
+```typescript
+export interface ProductImage {
+  id: string;
+  publicId: string;
+  alt: string;
+  isPrimary: boolean;
+  sortOrder: number;
+}
+
+export interface ProductVariant {
+  id: string;
+  size: string;
+  color: string;
+  colorHex: string;
+  sku: string;
+  stock: number;
+  price: number;
+  compareAtPrice?: number;
+}
+
+export type ProductStatus = 'active' | 'draft' | 'archived';
+
+export interface Product {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  shortDescription: string;
+  images: ProductImage[];
+  variants: ProductVariant[];
+  collectionIds: string[];
+  tags: string[];
+  status: ProductStatus;
+  isFeatured: boolean;
+  isNewArrival: boolean;
+  basePrice: number;
+  compareAtPrice?: number;
+  material?: string;
+  careInstructions?: string;
+  sizeChartImagePublicId?: string;
+  weight?: number;
+  metaTitle?: string;
+  metaDescription?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductQueryParams {
+  page?: number;
+  pageSize?: number;
+  collectionSlug?: string;
+  status?: ProductStatus;
+  featured?: boolean;
+  newArrival?: boolean;
+  sort?: 'newest' | 'price_asc' | 'price_desc' | 'featured';
+  minPrice?: number;
+  maxPrice?: number;
+  sizes?: string;
+  colors?: string;
+}
+```
+
+— /src/types/collection.ts —
+
+```typescript
+export interface Collection {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  imagePublicId: string;
+  isFeatured: boolean;
+  sortOrder: number;
+  metaTitle?: string;
+  metaDescription?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+— /src/types/cart.ts —
+
+```typescript
+export interface CartItem {
+  id: string;
+  productId: string;
+  variantId: string;
+  productName: string;
+  variantLabel: string;
+  imagePublicId: string;
+  price: number;
+  compareAtPrice?: number;
+  quantity: number;
+  maxQuantity: number;
+}
+
+export interface Cart {
+  items: CartItem[];
+  subtotal: number;
+  itemCount: number;
+}
+```
+
+— /src/types/order.ts —
+
+```typescript
+export type OrderStatus =
+  | 'pending' | 'confirmed' | 'processing'
+  | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
+
+export interface OrderItem {
+  id: string;
+  productId: string;
+  variantId: string;
+  productName: string;
+  variantLabel: string;
+  imagePublicId: string;
+  price: number;
+  quantity: number;
+  total: number;
+}
+
+export interface ShippingAddress {
+  fullName: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  phone: string;
+}
+
+export interface Order {
+  id: string;
+  orderNumber: string;
+  userId: string;
+  status: OrderStatus;
+  items: OrderItem[];
+  shippingAddress: ShippingAddress;
+  subtotal: number;
+  shippingCost: number;
+  tax: number;
+  total: number;
+  stripePaymentIntentId?: string;
+  trackingNumber?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateOrderInput {
+  userId: string;
+  items: { variantId: string; quantity: number }[];
+  shippingAddress: ShippingAddress;
+  couponCode?: string;
+}
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 4 — DATABASE SCHEMA (copy exactly)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Create /src/db/migrations/0000_init.sql:
+
+```sql
+CREATE TABLE store_config (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  store_name TEXT NOT NULL DEFAULT 'My Store',
+  store_tagline TEXT DEFAULT '',
+  logo_public_id TEXT DEFAULT '',
+  favicon_public_id TEXT DEFAULT '',
+  primary_color VARCHAR(7) DEFAULT '#1a1a1a',
+  secondary_color VARCHAR(7) DEFAULT '#ffffff',
+  accent_color VARCHAR(7) DEFAULT '#c9a96e',
+  currency VARCHAR(3) DEFAULT 'USD',
+  currency_symbol VARCHAR(5) DEFAULT '$',
+  locale VARCHAR(10) DEFAULT 'en-US',
+  social_links JSONB DEFAULT '{}',
+  contact_email TEXT DEFAULT '',
+  shipping_threshold INTEGER DEFAULT 10000,
+  return_policy TEXT DEFAULT '',
+  about_text TEXT DEFAULT '',
+  hero_heading TEXT DEFAULT 'New Collection',
+  hero_subheading TEXT DEFAULT 'Discover our latest arrivals',
+  hero_image_public_id TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+INSERT INTO store_config DEFAULT VALUES;
+
+CREATE TABLE collections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  image_public_id TEXT DEFAULT '',
+  is_featured BOOLEAN DEFAULT FALSE,
+  sort_order INTEGER DEFAULT 0,
+  meta_title TEXT DEFAULT '',
+  meta_description TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE products (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  short_description TEXT DEFAULT '',
+  base_price INTEGER NOT NULL DEFAULT 0,
+  compare_at_price INTEGER,
+  status TEXT DEFAULT 'draft'
+    CHECK (status IN ('active','draft','archived')),
+  is_featured BOOLEAN DEFAULT FALSE,
+  is_new_arrival BOOLEAN DEFAULT FALSE,
+  material TEXT DEFAULT '',
+  care_instructions TEXT DEFAULT '',
+  size_chart_image_public_id TEXT DEFAULT '',
+  weight INTEGER DEFAULT 0,
+  meta_title TEXT DEFAULT '',
+  meta_description TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE product_images (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  public_id TEXT NOT NULL,
+  alt TEXT DEFAULT '',
+  is_primary BOOLEAN DEFAULT FALSE,
+  sort_order INTEGER DEFAULT 0
+);
+
+CREATE TABLE product_variants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  size TEXT NOT NULL,
+  color TEXT NOT NULL,
+  color_hex VARCHAR(7) DEFAULT '#000000',
+  sku TEXT UNIQUE NOT NULL,
+  stock INTEGER DEFAULT 0,
+  price INTEGER NOT NULL,
+  compare_at_price INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE product_collections (
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  collection_id UUID REFERENCES collections(id) ON DELETE CASCADE,
+  PRIMARY KEY (product_id, collection_id)
+);
+
+CREATE TABLE product_tags (
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  tag TEXT NOT NULL,
+  PRIMARY KEY (product_id, tag)
+);
+
+CREATE TABLE orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_number TEXT UNIQUE NOT NULL,
+  user_id TEXT NOT NULL,
+  status TEXT DEFAULT 'pending'
+    CHECK (status IN (
+      'pending','confirmed','processing',
+      'shipped','delivered','cancelled','refunded'
+    )),
+  shipping_address JSONB NOT NULL,
+  subtotal INTEGER NOT NULL,
+  shipping_cost INTEGER DEFAULT 0,
+  tax INTEGER DEFAULT 0,
+  total INTEGER NOT NULL,
+  stripe_payment_intent_id TEXT,
+  tracking_number TEXT DEFAULT '',
+  notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE order_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id),
+  variant_id UUID REFERENCES product_variants(id),
+  product_name TEXT NOT NULL,
+  variant_label TEXT NOT NULL,
+  image_public_id TEXT DEFAULT '',
+  price INTEGER NOT NULL,
+  quantity INTEGER NOT NULL,
+  total INTEGER NOT NULL
+);
+
+CREATE TABLE wishlists (
+  user_id TEXT NOT NULL,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (user_id, product_id)
+);
+
+CREATE TABLE testimonials (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  author_name TEXT NOT NULL,
+  author_location TEXT DEFAULT '',
+  text TEXT NOT NULL,
+  rating INTEGER DEFAULT 5 CHECK (rating BETWEEN 1 AND 5),
+  is_visible BOOLEAN DEFAULT TRUE,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE homepage_banners (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  image_public_id TEXT NOT NULL,
+  heading TEXT DEFAULT '',
+  subheading TEXT DEFAULT '',
+  cta_text TEXT DEFAULT '',
+  cta_url TEXT DEFAULT '',
+  sort_order INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- INDEXES
+CREATE INDEX idx_products_status ON products(status);
+CREATE INDEX idx_products_slug ON products(slug);
+CREATE INDEX idx_products_featured ON products(is_featured);
+CREATE INDEX idx_products_new_arrival ON products(is_new_arrival);
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_collections_slug ON collections(slug);
+CREATE INDEX idx_variants_product ON product_variants(product_id);
+
+-- ROW LEVEL SECURITY
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE collections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wishlists ENABLE ROW LEVEL SECURITY;
+ALTER TABLE store_config ENABLE ROW LEVEL SECURITY;
+ALTER TABLE testimonials ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public read active products"
+  ON products FOR SELECT USING (status = 'active');
+
+CREATE POLICY "Public read collections"
+  ON collections FOR SELECT USING (true);
+
+CREATE POLICY "Public read store config"
+  ON store_config FOR SELECT USING (true);
+
+CREATE POLICY "Public read visible testimonials"
+  ON testimonials FOR SELECT USING (is_visible = true);
+
+CREATE POLICY "Users read own orders"
+  ON orders FOR SELECT USING (user_id = auth.uid()::text);
+
+CREATE POLICY "Users insert own orders"
+  ON orders FOR INSERT WITH CHECK (user_id = auth.uid()::text);
+
+CREATE POLICY "Users manage own wishlist"
+  ON wishlists FOR ALL USING (user_id = auth.uid()::text);
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 5 — FOLDER STRUCTURE (build exactly this)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+```
+src/
+├── app/
+│   ├── (store)/
+│   │   ├── layout.tsx              ← Navbar + Footer + AnnouncementBar
+│   │   ├── page.tsx                ← Homepage (10 sections)
+│   │   ├── loading.tsx
+│   │   ├── error.tsx
+│   │   ├── about/page.tsx
+│   │   ├── search/page.tsx
+│   │   ├── cart/page.tsx
+│   │   ├── checkout/page.tsx       ← Clerk protected
+│   │   ├── order-confirmation/page.tsx
+│   │   ├── collections/
+│   │   │   ├── page.tsx
+│   │   │   └── [slug]/
+│   │   │       ├── page.tsx
+│   │   │       └── loading.tsx
+│   │   ├── products/
+│   │   │   └── [slug]/
+│   │   │       ├── page.tsx
+│   │   │       └── loading.tsx
+│   │   └── account/
+│   │       ├── layout.tsx          ← Clerk protected
+│   │       ├── page.tsx
+│   │       ├── orders/
+│   │       │   ├── page.tsx
+│   │       │   └── [id]/page.tsx
+│   │       └── wishlist/page.tsx
+│   ├── (auth)/
+│   │   ├── sign-in/[[...sign-in]]/page.tsx
+│   │   └── sign-up/[[...sign-up]]/page.tsx
+│   ├── admin/
+│   │   ├── login/page.tsx
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── products/
+│   │   │   ├── page.tsx
+│   │   │   ├── new/page.tsx
+│   │   │   └── [id]/edit/page.tsx
+│   │   ├── collections/
+│   │   │   ├── page.tsx
+│   │   │   ├── new/page.tsx
+│   │   │   └── [id]/edit/page.tsx
+│   │   ├── orders/
+│   │   │   ├── page.tsx
+│   │   │   └── [id]/page.tsx
+│   │   ├── customers/page.tsx
+│   │   ├── settings/page.tsx
+│   │   ├── content/page.tsx
+│   │   └── analytics/page.tsx
+│   ├── api/
+│   │   ├── store-config/route.ts
+│   │   ├── products/
+│   │   │   ├── route.ts
+│   │   │   └── [id]/route.ts
+│   │   ├── collections/
+│   │   │   ├── route.ts
+│   │   │   └── [slug]/route.ts
+│   │   ├── search/route.ts
+│   │   ├── orders/
+│   │   │   ├── route.ts
+│   │   │   └── [id]/route.ts
+│   │   ├── webhooks/stripe/route.ts
+│   │   └── admin/
+│   │       ├── auth/route.ts
+│   │       ├── upload/route.ts
+│   │       ├── products/
+│   │       │   ├── route.ts
+│   │       │   └── [id]/route.ts
+│   │       ├── collections/
+│   │       │   ├── route.ts
+│   │       │   └── [id]/route.ts
+│   │       ├── orders/
+│   │       │   ├── route.ts
+│   │       │   └── [id]/route.ts
+│   │       ├── store-config/route.ts
+│   │       ├── analytics/route.ts
+│   │       ├── testimonials/route.ts
+│   │       └── banners/route.ts
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── sitemap.ts
+│   ├── robots.ts
+│   └── not-found.tsx
+├── components/
+│   ├── layout/
+│   │   ├── Navbar.tsx              ← See detailed spec below
+│   │   ├── Footer.tsx              ← See detailed spec below
+│   │   ├── MobileMenu.tsx
+│   │   └── AnnouncementBar.tsx     ← Marquee scrolling text
+│   ├── store/
+│   │   ├── ProductCard.tsx         ← See detailed spec below
+│   │   ├── ProductGrid.tsx
+│   │   ├── ProductImage.tsx
+│   │   ├── ProductVariants.tsx
+│   │   ├── AddToCartButton.tsx
+│   │   ├── WishlistButton.tsx
+│   │   ├── QuickViewModal.tsx      ← NEW: hover Quick View
+│   │   ├── PriceDisplay.tsx
+│   │   ├── StockBadge.tsx
+│   │   ├── SizeGuide.tsx
+│   │   ├── FilterSidebar.tsx
+│   │   ├── ActiveFilters.tsx       ← NEW: filter chips
+│   │   ├── SortDropdown.tsx
+│   │   ├── SearchBar.tsx
+│   │   ├── SearchOverlay.tsx       ← NEW: full-screen search
+│   │   ├── CollectionCard.tsx
+│   │   ├── ProductImageGallery.tsx ← NEW: advanced gallery
+│   │   └── Breadcrumb.tsx
+│   ├── cart/
+│   │   ├── CartDrawer.tsx
+│   │   ├── CartItem.tsx
+│   │   ├── CartSummary.tsx
+│   │   ├── FreeShippingBar.tsx     ← NEW: progress to free shipping
+│   │   └── EmptyCart.tsx
+│   ├── home/
+│   │   ├── HeroSection.tsx         ← See detailed spec below
+│   │   ├── FeaturedCollections.tsx
+│   │   ├── NewArrivals.tsx
+│   │   ├── PromoSection.tsx
+│   │   ├── BestSellers.tsx
+│   │   ├── TestimonialsSection.tsx
+│   │   ├── MarqueeSection.tsx      ← NEW: scrolling brand values
+│   │   ├── LookbookSection.tsx     ← NEW: editorial 2-col layout
+│   │   └── InstagramFeed.tsx
+│   ├── checkout/
+│   │   ├── CheckoutForm.tsx
+│   │   ├── AddressForm.tsx
+│   │   ├── PaymentSection.tsx
+│   │   └── OrderSummary.tsx
+│   ├── ui/
+│   │   ├── AnimatedCounter.tsx     ← NEW: number roll animation
+│   │   ├── RevealText.tsx          ← NEW: staggered word reveal
+│   │   ├── ParallaxImage.tsx       ← NEW: parallax CldImage
+│   │   ├── ScrollProgress.tsx      ← NEW: page scroll indicator
+│   │   └── CursorFollower.tsx      ← NEW: custom cursor (desktop)
+│   └── admin/
+│       ├── AdminSidebar.tsx
+│       ├── StatsCard.tsx
+│       ├── ProductForm.tsx
+│       ├── CollectionForm.tsx
+│       ├── ImageUploader.tsx
+│       └── ColorPicker.tsx
+├── lib/
+│   ├── supabase/
+│   │   ├── server.ts
+│   │   └── admin.ts
+│   ├── api/
+│   │   ├── client.ts
+│   │   ├── products.ts
+│   │   ├── collections.ts
+│   │   ├── cart.ts
+│   │   ├── orders.ts
+│   │   └── store-config.ts
+│   ├── db/
+│   │   ├── schema.ts
+│   │   └── queries/
+│   │       ├── products.ts
+│   │       ├── collections.ts
+│   │       ├── orders.ts
+│   │       └── store-config.ts
+│   ├── stripe.ts
+│   ├── cloudinary.ts
+│   ├── email.ts
+│   ├── admin-auth.ts
+│   └── utils.ts
+├── store/
+│   ├── cartStore.ts
+│   ├── wishlistStore.ts
+│   └── uiStore.ts
+├── hooks/
+│   ├── useCart.ts
+│   ├── useWishlist.ts
+│   ├── useStoreConfig.ts
+│   ├── useMediaQuery.ts
+│   ├── useScrollDirection.ts      ← NEW: for navbar hide/show
+│   └── useIntersectionObserver.ts ← NEW: for scroll reveals
+├── types/
+├── emails/
+│   ├── OrderConfirmation.tsx
+│   ├── OrderShipped.tsx
+│   └── OrderDelivered.tsx
+└── middleware.ts
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 6 — CONFIG FILES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+— next.config.ts —
+
+```typescript
+import type { NextConfig } from 'next';
+const nextConfig: NextConfig = {
+  images: {
+    domains: ['res.cloudinary.com'],
+  },
+  experimental: {
+    serverActions: { allowedOrigins: ['localhost:3000'] },
+  },
+};
+export default nextConfig;
+```
+
+— vercel.json (REQUIRED for one-command deploy) —
+
+```json
+{
+  "framework": "nextjs",
+  "buildCommand": "pnpm build",
+  "installCommand": "pnpm install",
+  "outputDirectory": ".next",
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@next_public_supabase_anon_key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
+    "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "@next_public_clerk_publishable_key",
+    "CLERK_SECRET_KEY": "@clerk_secret_key",
+    "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME": "@next_public_cloudinary_cloud_name",
+    "CLOUDINARY_API_KEY": "@cloudinary_api_key",
+    "CLOUDINARY_API_SECRET": "@cloudinary_api_secret",
+    "STRIPE_SECRET_KEY": "@stripe_secret_key",
+    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "@next_public_stripe_publishable_key",
+    "STRIPE_WEBHOOK_SECRET": "@stripe_webhook_secret",
+    "RESEND_API_KEY": "@resend_api_key",
+    "NEXT_PUBLIC_SITE_URL": "@next_public_site_url",
+    "ADMIN_PASSWORD": "@admin_password",
+    "ADMIN_SESSION_SECRET": "@admin_session_secret"
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,PUT,DELETE,PATCH,OPTIONS" }
+      ]
+    }
+  ]
+}
+```
+
+— drizzle.config.ts —
+
+```typescript
+import type { Config } from 'drizzle-kit';
+export default {
+  schema: './src/lib/db/schema.ts',
+  out: './src/db/migrations',
+  driver: 'pg',
+  dbCredentials: {
+    connectionString: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  },
+} satisfies Config;
+```
+
+— middleware.ts —
+
+```typescript
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+const isProtected = createRouteMatcher(['/checkout(.*)', '/account(.*)']);
+export default clerkMiddleware((auth, req) => {
+  if (isProtected(req)) auth().protect();
+});
+export const config = {
+  matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
+};
+```
+
+— globals.css —
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-brand: #0f0f0f;
+    --color-brand-light: #2a2a2a;
+    --color-accent: #c9a96e;
+    --color-accent-light: #e8d5b0;
+    --color-surface: #fafaf8;
+    --color-surface-alt: #f4f3f0;
+    --color-border: #e8e7e3;
+    --color-border-dark: #d0cfc9;
+    --color-text: #0f0f0f;
+    --color-text-muted: #6b6b6b;
+    --font-display: var(--font-cormorant);
+    --font-body: var(--font-inter);
+    --font-accent: var(--font-bebas);
+    --radius-card: 2px;
+    --radius-btn: 0px;
+    --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Scroll behavior */
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--color-surface); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-accent);
+    border-radius: 2px;
+  }
+
+  /* Selection color */
+  ::selection {
+    background: var(--color-accent);
+    color: #fff;
+  }
+}
+
+@layer utilities {
+  .font-display { font-family: var(--font-display); }
+  .font-accent  { font-family: var(--font-accent);  }
+
+  /* Luxury text underline */
+  .underline-accent {
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent);
+    text-underline-offset: 4px;
+  }
+
+  /* Editorial image aspect ratios */
+  .aspect-fashion    { aspect-ratio: 3/4; }
+  .aspect-editorial  { aspect-ratio: 4/5; }
+  .aspect-hero       { aspect-ratio: 16/9; }
+
+  /* Hover zoom for product images */
+  .img-zoom {
+    overflow: hidden;
+  }
+  .img-zoom img,
+  .img-zoom .cld-image {
+    transition: transform var(--transition-slow);
+  }
+  .img-zoom:hover img,
+  .img-zoom:hover .cld-image {
+    transform: scale(1.06);
+  }
+
+  /* Text mask gradient fade */
+  .text-fade-bottom {
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  }
+
+  /* Marquee animation */
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  .animate-marquee {
+    animation: marquee 20s linear infinite;
+  }
+
+  /* Fade-up reveal */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-up {
+    animation: fadeUp 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  /* Staggered children */
+  .stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger > *:nth-child(2) { animation-delay: 80ms; }
+  .stagger > *:nth-child(3) { animation-delay: 160ms; }
+  .stagger > *:nth-child(4) { animation-delay: 240ms; }
+  .stagger > *:nth-child(5) { animation-delay: 320ms; }
+  .stagger > *:nth-child(6) { animation-delay: 400ms; }
+}
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 6B — FONTS SETUP (/src/app/layout.tsx)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+```typescript
+import { Cormorant_Garamond, Inter, Bebas_Neue } from 'next/font/google';
+
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-cormorant',
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const bebas = Bebas_Neue({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-bebas',
+  display: 'swap',
+});
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 7 — ADMIN AUTH (password only, no Clerk)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+— /src/lib/admin-auth.ts —
+
+```typescript
+import { cookies } from 'next/headers';
+
+const COOKIE_NAME = 'admin_session';
+const SESSION_VALUE = 'authenticated';
+
+export function isAdminAuthenticated(): boolean {
+  const cookieStore = cookies();
+  return cookieStore.get(COOKIE_NAME)?.value === SESSION_VALUE;
+}
+
+export function setAdminCookie(): void {
+  cookies().set(COOKIE_NAME, SESSION_VALUE, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+    path: '/',
+  });
+}
+
+export function clearAdminCookie(): void {
+  cookies().delete(COOKIE_NAME);
+}
+```
+
+— /src/app/api/admin/auth/route.ts —
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { setAdminCookie, clearAdminCookie } from '@/lib/admin-auth';
+
+export async function POST(req: NextRequest) {
+  const { password } = await req.json();
+  if (password !== process.env.ADMIN_PASSWORD) {
+    return NextResponse.json({ data: null, error: 'Invalid password' }, { status: 401 });
+  }
+  setAdminCookie();
+  return NextResponse.json({ data: 'ok', error: null });
+}
+
+export async function DELETE() {
+  clearAdminCookie();
+  return NextResponse.json({ data: 'ok', error: null });
+}
+```
+
+— /src/app/admin/layout.tsx —
+
+```typescript
+import { isAdminAuthenticated } from '@/lib/admin-auth';
+import { redirect } from 'next/navigation';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  if (!isAdminAuthenticated()) redirect('/admin/login');
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <AdminSidebar />
+      <main className="flex-1 overflow-auto p-6">{children}</main>
+    </div>
+  );
+}
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 8 — SUPABASE + DRIZZLE CLIENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+— /src/lib/supabase/server.ts —
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+```
+
+— /src/lib/supabase/admin.ts —
+
+```typescript
+import { createClient } from '@supabase/supabase-js';
+export const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 9 — API ROUTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[Same as v2.0 — copy all routes exactly as specified in original]
+
+All routes return: { data: T | null, error: string | null, meta?: {…} }
+Use supabase (anon) for public GET routes.
+Use supabaseAdmin (service_role) for all admin routes and webhook.
+
+── GET /api/store-config → fetch store_config first row, cache 3600s
+── GET /api/products → paginated with full joins
+── GET /api/products/[id] → slug or uuid, all relations
+── GET /api/collections → sorted by sort_order
+── GET /api/collections/[slug] → collection + products
+── GET /api/search?q= → full-text search
+── POST /api/orders → validate, create PaymentIntent, save to DB
+── GET /api/orders → Clerk auth, filter by userId
+── GET /api/orders/[id] → Clerk auth, verify ownership
+── POST /api/webhooks/stripe → raw body, verify signature, update order
+── POST /api/admin/upload → Cloudinary upload
+── DELETE /api/admin/upload → Cloudinary delete
+── CRUD /api/admin/products
+── CRUD /api/admin/collections
+── CRUD /api/admin/orders
+── GET /api/admin/analytics
+── CRUD /api/admin/testimonials
+── CRUD /api/admin/banners
+── GET+PUT /api/admin/store-config
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 10 — WORLD-CLASS STOREFRONT FRONTEND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+╔═══════════════════════════════════════════════════════════════════╗
+║   DESIGN LANGUAGE — LUXURY EDITORIAL FASHION                     ║
+║                                                                   ║
+║   Inspiration: Jacquemus.com, Bottega Veneta, Arc’teryx,          ║
+║                Shopify Prestige theme, GatsbyHub Premium themes   ║
+║                                                                   ║
+║   Principles:                                                     ║
+║   1. TYPOGRAPHY IS THE HERO — Cormorant Garamond for              ║
+║      headings creates instant luxury perception.                  ║
+║      Use 72px–120px for hero text. Let type breathe.             ║
+║   2. WHITE SPACE IS PRODUCT — Generous padding signals            ║
+║      premium. Never crowd elements.                               ║
+║   3. IMAGES DOMINATE — Let product photography fill the           ║
+║      viewport. UI elements step back.                             ║
+║   4. EVERY INTERACTION IS CHOREOGRAPHED — Hover, click,          ║
+║      scroll — all have micro-animations.                          ║
+║   5. MOBILE FIRST, GESTURE NATIVE — Swipe carousels,             ║
+║      bottom sheets, thumb-friendly targets.                       ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT SPECS
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+── NAVBAR (Navbar.tsx)
+
+BEHAVIOR:
+
+- Transparent on homepage hero, solid white after scrolling 80px
+- useScrollDirection hook: hide on scroll down, show on scroll up
+  (classic Shopify Prestige behavior)
+- Transition: opacity + translateY with 300ms ease
+
+DESKTOP LAYOUT:
+Left:   Logo (SVG or CldImage)
+Center: Nav links — Collections / New Arrivals / About
+Each link has: underline slide-in on hover (::after pseudo)
+Mega dropdown on “Collections”: 2-col layout with images
+Right:  Search icon | Wishlist icon (with count badge) |
+Account icon (Clerk UserButton) | Cart icon (with count badge)
+
+MOBILE LAYOUT:
+Left:   Hamburger (animated to X)
+Center: Logo
+Right:  Cart icon with count
+
+CART ICON BADGE: Framer Motion scale bounce on item add.
+MOBILE MENU: Full-screen overlay slide from left, links fade in staggered.
+
+── ANNOUNCEMENT BAR (AnnouncementBar.tsx)
+
+Marquee scrolling text: “FREE SHIPPING ON ORDERS OVER $XX  ·  
+NEW COLLECTION JUST DROPPED  ·  USE CODE WELCOME10 FOR 10% OFF  ·”
+Background: var(–color-brand). Text: white. Font: Bebas Neue 14px tracking-widest.
+Auto-scroll via CSS animation. Pause on hover.
+
+── PRODUCT CARD (ProductCard.tsx) — THE MOST IMPORTANT COMPONENT
+
+DIMENSIONS: aspect-ratio 3/4. Border-radius: var(–radius-card).
+Zero borders, zero shadows by default.
+
+STATE 1 — DEFAULT:
+
+- Primary image fills card
+- Bottom gradient overlay (transparent → rgba(0,0,0,0.4))
+- Product name in white at bottom-left (Cormorant Garamond 18px)
+- Price at bottom-right (Inter 14px white)
+
+STATE 2 — HOVER (desktop):
+
+- Secondary image crossfades in (300ms opacity transition)
+- “Quick View” button slides up from bottom (translateY animation)
+- Wishlist button appears top-right (scale animation)
+- Bottom name/price remains visible
+
+STATE 3 — NEW ARRIVAL / SALE badge:
+
+- Top-left chip: “NEW” (black bg) or “−20%” (accent color bg)
+- Font: Inter 10px uppercase tracking-widest
+
+QUICK VIEW MODAL:
+
+- Opens on Quick View click
+- Shadcn Dialog, max-w-3xl
+- Left: image gallery  Right: name, price, variant selector, ATC button
+- Framer Motion: scale from 0.95 + opacity
+
+MOBILE: No Quick View. Tap navigates to PDP.
+
+── HERO SECTION (HeroSection.tsx)
+
+HEIGHT: 100vh. Position: relative.
+BACKGROUND: CldImage fill object-cover with ParallaxImage wrapper
+(moves at 0.4x scroll speed — classic Shopify Dawn effect)
+OVERLAY: Linear gradient (transparent 40% → brand 90%)
+CONTENT (centered bottom-left with 10% padding):
+
+- Pre-heading: Bebas Neue 14px tracking-[0.4em] uppercase
+  animated: opacity 0 → 1 delay 200ms
+- Main heading: Cormorant Garamond 96px (mobile: 56px) italic
+  animated: opacity 0 + translateY(30px) → normal delay 400ms
+- Sub-heading: Inter 16px color-text-muted
+  animated: same delay 600ms
+- Two CTA buttons:
+  Primary: solid brand bg, white text, no border-radius
+  Secondary: transparent, white border, white text
+  Both: animated fadeUp delay 800ms, hover scale(1.02)
+- Scroll indicator: animated bouncing arrow at bottom-center
+
+── FEATURED COLLECTIONS (FeaturedCollections.tsx)
+
+DESKTOP: Asymmetric CSS grid layout:
+
+- First collection: large card (spans 2 rows, 60% width)
+- Remaining 3: stacked smaller cards (40% width)
+- Each card: aspect-editorial, img-zoom class, collection name overlay
+
+MOBILE: Horizontal scroll carousel (Embla Carousel)
+Visible: 1.2 cards (peek effect shows next card)
+Dots indicator below
+
+REVEAL: useIntersectionObserver → cards animate in staggered
+(translateY 40px → 0, delay 0/100/200/300ms)
+
+── NEW ARRIVALS + BEST SELLERS (NewArrivals.tsx / BestSellers.tsx)
+
+SECTION HEADER:
+
+- Pre-label: Bebas Neue 12px tracking-[0.5em] accent color
+- Title: Cormorant Garamond 56px (mobile: 36px)
+- Subtitle: Inter 16px muted, max-width 480px
+- Right side: “View All →” link
+
+PRODUCT GRID:
+DESKTOP: 4-column CSS grid, gap-6
+TABLET: 3-column
+MOBILE: 2-column (ProductCard adapts — name below image on mobile)
+
+LOADING: Skeleton cards with shimmer animation (same grid layout)
+
+── MARQUEE SECTION (MarqueeSection.tsx) — NEW
+
+Full-width section, 64px height, brand background.
+Continuously scrolling text (CSS animation):
+“QUALITY CRAFTSMANSHIP  ✦  SUSTAINABLE MATERIALS  ✦  
+WORLDWIDE SHIPPING  ✦  30-DAY RETURNS  ✦ “
+Font: Bebas Neue 20px letter-spacing-widest white text.
+Dividers: ✦ in accent color.
+
+── LOOKBOOK SECTION (LookbookSection.tsx) — NEW
+
+Editorial 2-column grid. Full section height.
+Left: Large editorial CldImage (60% width)
+Right: 2 stacked smaller images + text block
+
+- Eyebrow: Bebas Neue 12px accent
+- Heading: Cormorant Garamond 48px italic
+- Body: Inter 15px muted, max 380px
+- CTA link with arrow icon
+  Hover on any image: subtle scale(1.03) transition
+
+── TESTIMONIALS SECTION (TestimonialsSection.tsx)
+
+Background: var(–color-surface-alt). Full-bleed.
+3-column card grid (mobile: carousel)
+Each card:
+
+- Rating: 5 filled stars in accent color
+- Quote text: Cormorant Garamond 22px italic, muted
+- Author: Inter 14px bold
+- Location: Inter 12px muted
+- Top-left: decorative “ in accent color, 80px font size
+
+── SEARCH OVERLAY (SearchOverlay.tsx) — NEW
+
+Triggered by search icon click.
+Full-screen overlay (backdrop-blur-md), z-50.
+Top: search input (large, 48px height, auto-focused)
+Below input: “Trending searches” chip links
+Results: 4-column mini product grid as user types (300ms debounce)
+Close: ESC key or X button.
+Animation: opacity 0 → 1 + backdrop fade.
+
+── PRODUCT IMAGE GALLERY (ProductImageGallery.tsx) — NEW
+
+DESKTOP:
+Left column (66%): Main image with zoom on hover
+
+- Mouse move → transform-origin follows cursor (magnifier effect)
+- CldImage with quality=“auto” format=“auto” crop=“fill”
+  Right column (34%): Thumbnail strip (vertical scroll)
+- Active thumbnail has accent color border
+- Click switches main image with crossfade
+
+MOBILE:
+
+- Full-width swipe carousel (Embla)
+- Dot indicators below
+- Pinch-to-zoom supported via touch events
+- Counter “1 / 5” top-right
+
+── FILTER SIDEBAR (FilterSidebar.tsx)
+
+DESKTOP: sticky left sidebar (280px wide)
+MOBILE: slide-up bottom sheet (Shadcn Drawer)
+Sections (Shadcn Accordion):
+
+- Price range (dual-handle Slider)
+- Colors (circular swatches with checkmarks)
+- Sizes (pill buttons toggle)
+- Availability checkbox
+- Sort (radio group)
+  ActiveFilters.tsx: row of dismissible chips above grid
+  each chip: filter label + X button, remove on click
+  “Clear all” link at right
+  Result count: “Showing 24 of 48 products”
+
+── CART DRAWER (CartDrawer.tsx)
+
+Shadcn Sheet from right, 420px wide.
+HEADER: “Your Cart (3)” + X close button
+FREE SHIPPING BAR:
+Progress bar to free shipping threshold (accent color fill)
+“Add $XX more for free shipping” → “🎉 You’ve unlocked free shipping!”
+ITEMS: scrollable list (CartItem components)
+
+- Each item: image (64px) + name/variant + qty stepper + price
+- Remove: trash icon, Framer Motion exit animation (height collapse)
+- Qty stepper: - [number] + buttons
+  FOOTER (sticky):
+- Subtotal row
+- “View Cart” outline button
+- “Checkout” solid button (full width)
+  EMPTY STATE: centered icon + “Your cart is empty” + “Start Shopping” CTA
+
+── CHECKOUT (3-step)
+
+LAYOUT: 2-column (left: form, right: sticky order summary)
+MOBILE: single column, summary collapses to accordion
+
+Step indicator: horizontal stepper (1 Shipping → 2 Review → 3 Payment)
+Active step: accent color + filled circle
+Complete step: checkmark
+
+Step 1 — Shipping Address:
+AddressForm with react-hook-form + Zod validation
+Fields: Full Name, Email (pre-filled from Clerk), Phone,
+Address Line 1+2, City, State/Province, Postal Code, Country
+Real-time validation, inline error messages
+
+Step 2 — Review:
+Order items list (read-only)
+Shipping method selector: Standard / Express
+Editable shipping address summary + “Edit” link
+
+Step 3 — Payment:
+Stripe Elements card field (dark theme matching brand)
+Billing address: “Same as shipping” checkbox
+Pay button with loading spinner + amount
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 11 — STATE MANAGEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+— /src/store/cartStore.ts —
+Zustand with persist (localStorage key: ‘storekit-cart’)
+Actions: addItem, removeItem, updateQuantity, clearCart
+Computed: itemCount, subtotal
+
+— /src/store/wishlistStore.ts —
+Zustand with persist (localStorage key: ‘storekit-wishlist’)
+Actions: addItem, removeItem, isInWishlist
+
+— /src/store/uiStore.ts —
+State: isCartOpen, isMobileMenuOpen, isSearchOpen, isQuickViewOpen,
+quickViewProductId
+Actions: openCart, closeCart, toggleMobileMenu, openSearch, closeSearch,
+openQuickView(id), closeQuickView
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 12 — ADMIN DASHBOARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[Same as v2.0 — full admin spec preserved, see below]
+
+ADMIN DESIGN:
+Dark sidebar (#0f0f0f) + light content area (#f8f8f8)
+Use Shadcn DataTable (TanStack Table) for all tables
+Use Recharts for all charts
+Use react-dropzone for image uploads
+Use react-colorful for color pickers
+Admin is responsive (tablet + desktop)
+
+── /admin/login
+Centered card with logo placeholder
+Single password input + submit button
+POST /api/admin/auth on submit
+On success → redirect /admin
+
+── /admin (Dashboard)
+Stats cards: Total Revenue, Total Orders, Active Products, New Customers
+Charts:
+Revenue last 30 days (line chart, Recharts)
+Orders by status (donut chart, Recharts)
+Top 5 products by sales (bar chart, Recharts)
+Recent orders table (last 10)
+Low stock alerts (variants stock < 5)
+
+── /admin/products
+DataTable: Image thumbnail, Name, Status badge, Price, Stock, Date, Actions
+Search by name, filter by status + collection
+Bulk actions: delete, change status
+“New Product” button
+
+── /admin/products/new + /admin/products/[id]/edit
+Multi-step form (5 steps, progress indicator):
+Step 1 — Basic Info: Name, slug, short desc, full desc, status, toggles
+Step 2 — Images: react-dropzone → upload to /api/admin/upload
+Step 3 — Variants: dynamic table (Size, Color, Hex, SKU, Stock, Price)
+Step 4 — Organization: collections, tags, weight, material, care
+Step 5 — SEO: meta title (60 char), meta desc (160 char), preview
+
+── /admin/collections → DataTable + drag to reorder
+── /admin/collections/new + edit → full form
+── /admin/orders → DataTable with filters
+── /admin/orders/[id] → full detail + status + tracking
+── /admin/customers → DataTable from Clerk + orders
+── /admin/settings → full StoreConfig form with color pickers
+── /admin/content → Tabs: Testimonials + Banners
+── /admin/analytics → revenue/month bar, status pie, top products table
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 13 — INTEGRATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+── CLOUDINARY (/src/lib/cloudinary.ts)
+
+```typescript
+import { v2 as cloudinary } from 'cloudinary';
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+export { cloudinary };
+```
+
+── STRIPE (/src/lib/stripe.ts)
+
+```typescript
+import Stripe from 'stripe';
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2024-06-20',
+});
+```
+
+── EMAIL (/src/lib/email.ts + /src/emails/)
+React Email templates: OrderConfirmation, OrderShipped, OrderDelivered
+Send via Resend.
+
+── ORDER NUMBER: SK-YYYY-NNNNN (zero-padded 5 digits)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 14 — WHITE-LABEL CSS WIRING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+In /src/app/(store)/layout.tsx inject from DB:
+
+```typescript
+<style>{`
+  :root {
+    --color-brand: ${config.primaryColor};
+    --color-accent: ${config.accentColor};
+  }
+`}</style>
+```
+
+generateMetadata() reads config.storeName + config.storeTagline.
+ZERO hardcoded brand names. ZERO hardcoded colors. ZERO hardcoded images.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 15 — PERFORMANCE & SEO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- All product listing pages: Server Components + Suspense
+- Cart/Wishlist: Client Components with Zustand
+- Every route: loading.tsx + error.tsx with skeleton UI
+- Dynamic import: SizeGuide modal, SearchOverlay, QuickViewModal
+  (only loaded when opened — reduces initial bundle)
+- Skeleton loaders match exact layout of real content (no layout shift)
+- Product pages: generateMetadata() + JSON-LD
+- Sitemap: /src/app/sitemap.ts from DB
+- Robots: /src/app/robots.ts
+- CldImage: always explicit width+height + format=“auto” + quality=“auto”
+  Add priority={true} on above-fold images (hero, first product card row)
+- LCP target: < 2.5s on Vercel Edge
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 16 — ANIMATIONS (Framer Motion v11)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GLOBAL PRINCIPLES:
+
+- Use whileInView with viewport={{ once: true }} for scroll reveals
+- Use AnimatePresence for all enter/exit transitions
+- Prefer spring() physics over linear easing for organic feel
+- Never animate more than 2 properties simultaneously
+
+SPECIFIC ANIMATIONS:
+
+Page transitions:
+initial: { opacity: 0, y: 12 }
+animate: { opacity: 1, y: 0 }
+transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
+
+Section reveals (ProductGrid, TestimonialsSection, etc.):
+Stagger children with delay increments of 0.08s
+initial: { opacity: 0, y: 32 }
+whileInView: { opacity: 1, y: 0 }
+
+Cart badge on item add:
+Sequence: scale(1) → scale(1.4) → scale(1)
+Duration: 0.3s
+
+CartItem remove:
+animate: { height: 0, opacity: 0, marginBottom: 0 }
+Creates accordion collapse
+
+Hero text reveal (RevealText.tsx):
+Split heading by words
+Stagger each word: opacity 0 + y 20 → normal
+Delay: index * 0.08s
+
+Product card hover (CSS + Framer):
+Image zoom: CSS transform (avoid Framer for performance)
+Quick View button: Framer translateY(-8px) + opacity
+Wishlist: Framer scale from 0 → 1.1 → 1
+
+Order confirmation:
+Large success checkmark draws in (SVG pathLength animation)
+Staggered order summary items fade in below
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 17 — CUSTOM CURSOR (CursorFollower.tsx) — DESKTOP ONLY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Render only on desktop (useMediaQuery(’(min-width: 1024px)’)).
+Hide default cursor on desktop: cursor: none on body.
+Two elements:
+
+1. Small dot (8px, accent color): follows mouse exactly
+1. Larger circle (40px, accent 20% opacity): follows with spring lag
+   spring({ stiffness: 150, damping: 20 })
+
+State changes:
+On hovering product cards: circle expands (64px) + shows “VIEW” text
+On hovering links: dot shrinks to 4px
+On hovering images: circle changes to crosshair icon
+
+Implementation: useMotionValue(x/y) + useSpring() + motion.div
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 18 — MOBILE EXPERIENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+These Shopify-inspired mobile patterns are REQUIRED:
+
+1. STICKY ADD TO CART BAR (product page mobile):
+   When user scrolls past ATC button → sticky bar appears at bottom
+   Shows: product name, selected variant, price, ATC button
+   Height: 64px, brand background
+1. BOTTOM NAVIGATION BAR (mobile only):
+   5 icons: Home / Collections / Search / Wishlist / Account
+   Fixed bottom, white bg, active icon in accent color
+   Hidden on scroll down, shown on scroll up
+1. FILTER BOTTOM SHEET:
+   “Filter & Sort” button at top of collection grid
+   Opens Shadcn Drawer from bottom (full-screen on mobile)
+   Same filter content as desktop sidebar
+1. PRODUCT IMAGE SWIPE:
+   Embla carousel, one image at a time
+   Dot indicators below
+   Counter badge (e.g. “2/6”) in corner
+1. CART DRAWER → CART PAGE on mobile:
+   On mobile, “View Cart” links to /cart page instead of drawer
+1. GESTURE FEEDBACK:
+   All tap targets min 44x44px
+   Buttons have :active state (scale 0.97)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 19 — ONE-COMMAND DEPLOY (READ CAREFULLY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This project must deploy with ZERO manual build steps beyond env vars.
+Include a README.md with this exact deploy guide:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DEPLOY IN 5 STEPS — NO CLI REQUIRED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1 — SUPABASE (5 min)
+  → supabase.com → New Project → wait for setup
+  → SQL Editor → paste /src/db/migrations/0000_init.sql → Run
+  → Settings → API → copy URL + anon key + service_role key
+
+STEP 2 — EXTERNAL SERVICES (10 min)
+  → Clerk: clerk.com → New App → copy keys
+  → Cloudinary: cloudinary.com → Dashboard → copy credentials
+  → Stripe: stripe.com/test → Developers → API Keys → copy keys
+  → Resend: resend.com → API Keys → create → copy key
+
+STEP 3 — PUSH TO GITHUB (1 min)
+  → Create new repo on github.com
+  → git init && git add . && git commit -m "init"
+  → git remote add origin YOUR_REPO_URL
+  → git push -u origin main
+
+STEP 4 — DEPLOY TO VERCEL (3 min)
+  → vercel.com → New Project → Import your GitHub repo
+  → Add Environment Variables (paste all from .env.local.example)
+  → Framework: Next.js (auto-detected)
+  → Click Deploy → wait 2-3 minutes
+  → Your store is live at: https://your-project.vercel.app
+
+STEP 5 — STRIPE WEBHOOK (2 min)
+  → stripe.com → Developers → Webhooks → Add endpoint
+  → URL: https://your-project.vercel.app/api/webhooks/stripe
+  → Events: payment_intent.succeeded + payment_intent.payment_failed
+  → Copy signing secret → Vercel Settings → Env Vars →
+    STRIPE_WEBHOOK_SECRET → paste → Redeploy (1 click)
+
+STEP 6 — FIRST LOGIN (2 min)
+  → https://your-project.vercel.app/admin/login
+  → Enter your ADMIN_PASSWORD
+  → Settings → set store name, logo, colors
+  → Create first collection → add first product
+  → ✓ YOUR STORE IS LIVE
+
+TEST CARD: 4242 4242 4242 4242 | Any future date | Any CVC
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 20 — FINAL SELF-VALIDATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Run: pnpm build — must show 0 errors, 0 TypeScript errors
+
+FRONTEND QUALITY CHECKS:
+[ ] Navbar hides on scroll down, shows on scroll up
+[ ] Navbar transparent on hero, solid on other pages
+[ ] AnnouncementBar marquee scrolls continuously
+[ ] ProductCard Quick View works on desktop
+[ ] ProductCard secondary image crossfades on hover
+[ ] Hero parallax effect works
+[ ] All section reveals trigger on scroll (viewport once)
+[ ] Cart drawer slides from right with spring physics
+[ ] Free shipping progress bar updates correctly
+[ ] CartItem remove animation (height collapse)
+[ ] Search overlay opens full-screen on search icon click
+[ ] Filter sidebar / bottom sheet works (desktop / mobile)
+[ ] Active filter chips dismissible
+[ ] Product image gallery: desktop magnifier + mobile swipe
+[ ] Sticky ATC bar appears on mobile product page on scroll
+[ ] Bottom nav visible on all mobile pages
+[ ] Order confirmation SVG checkmark animation plays
+[ ] Custom cursor follows mouse on desktop
+[ ] Fonts: Cormorant Garamond for headings, Inter for body
+[ ] CSS vars change when config.primaryColor changes
+[ ] All buttons have hover + active states
+
+STOREFRONT PAGES:
+[ ] Homepage — all 10 sections render
+[ ] Collections listing — asymmetric grid desktop, carousel mobile
+[ ] Single collection with filters + sort + active filter chips
+[ ] Product detail with gallery + variants + sticky mobile ATC
+[ ] Cart page + drawer
+[ ] Checkout — 3 steps + Stripe Elements
+[ ] Order confirmation — animated checkmark
+[ ] Account overview / orders / wishlist (Clerk protected)
+[ ] Search overlay + results page
+[ ] Sign in / Sign up (Clerk components)
+[ ] 404 page
+
+ADMIN:
+[ ] /admin/login — password form works
+[ ] /admin dashboard loads with charts
+[ ] Products CRUD end-to-end
+[ ] Collections CRUD
+[ ] Orders list + detail + status update
+[ ] Store settings saves to DB + live preview colors
+[ ] Image upload to Cloudinary works
+[ ] Logout clears cookie
+
+API:
+[ ] All public routes return correct envelope
+[ ] All admin routes return 401 without cookie
+[ ] Stripe webhook verifies signature
+[ ] Order creation validates prices server-side
+
+DEPLOY:
+[ ] vercel.json present in root
+[ ] README.md deploy guide present
+[ ] .env.local.example complete
+[ ] pnpm build passes 0 errors on clean clone
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+END OF PROMPT — BUILD ORDER SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Step 1   → Scaffold + install (pnpm)
+Step 2   → .env files + .env.local.example
+Step 3   → TypeScript interfaces (frozen)
+Step 4   → SQL schema + RLS
+Step 5   → Folder structure
+Step 6   → next.config + vercel.json + drizzle.config + globals.css + fonts
+Step 7   → Admin auth (password + cookie)
+Step 8   → Supabase clients
+Step 9   → All API routes
+Step 10  → World-class storefront frontend (see detailed component specs)
+Step 11  → Zustand stores (cart, wishlist, ui)
+Step 12  → Admin dashboard pages
+Step 13  → Cloudinary + Stripe + Email + Order number
+Step 14  → White-label CSS wiring
+Step 15  → Performance + SEO
+Step 16  → Framer Motion animations
+Step 17  → Custom cursor (desktop)
+Step 18  → Mobile-first experience
+Step 19  → vercel.json + README deploy guide
+Step 20  → Validation + pnpm build ✓
+
+KEY FRONTEND UPGRADES vs v2.0:
+✦ Cormorant Garamond + Bebas Neue typography system
+✦ Transparent→solid sticky navbar with hide-on-scroll
+✦ Marquee announcement bar
+✦ Asymmetric editorial grid layouts
+✦ ProductCard Quick View modal
+✦ Advanced product image gallery (magnifier + swipe)
+✦ Full-screen search overlay with live results
+✦ Cart free shipping progress bar
+✦ Lookbook editorial section
+✦ Custom cursor with spring physics (desktop)
+✦ Sticky mobile ATC bar
+✦ Mobile bottom navigation bar
+✦ Active filter chips
+✦ CSS scroll-triggered reveals on all sections
+✦ SVG checkmark animation on order confirmation
+✦ vercel.json for one-command deploy
+✦ README with 6-step deploy guide

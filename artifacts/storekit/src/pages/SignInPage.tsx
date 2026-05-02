@@ -1,0 +1,36 @@
+import { SignIn } from "@clerk/react";
+import Layout from "@/components/Layout";
+
+export default function SignInPage() {
+  return (
+    <Layout noFooter>
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="font-display text-4xl font-light" style={{ fontFamily: "var(--font-display)" }}>
+              Welcome Back
+            </h1>
+            <p className="text-sm text-muted-foreground mt-2">Sign in to your account to continue</p>
+          </div>
+          <SignIn
+            routing="path"
+            path="/sign-in"
+            afterSignInUrl="/"
+            appearance={{
+              elements: {
+                rootBox: "w-full",
+                card: "shadow-none border border-border bg-card rounded-none p-8",
+                headerTitle: "hidden",
+                headerSubtitle: "hidden",
+                socialButtonsBlockButton: "border border-border rounded-none text-sm py-3 hover:bg-muted",
+                formButtonPrimary: "bg-foreground text-background rounded-none text-xs tracking-[0.15em] uppercase py-3 hover:bg-foreground/80",
+                formFieldInput: "border-border rounded-none text-sm focus:ring-1 focus:ring-foreground",
+                footerActionLink: "text-accent hover:text-accent/80",
+              },
+            }}
+          />
+        </div>
+      </div>
+    </Layout>
+  );
+}

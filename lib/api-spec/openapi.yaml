@@ -1,22 +1,47 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: StoreKit API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: store-config
+    description: Store configuration
+  - name: products
+    description: Product operations
+  - name: collections
+    description: Collection operations
+  - name: search
+    description: Search operations
+  - name: orders
+    description: Order operations
+  - name: wishlist
+    description: Wishlist operations
+  - name: admin-auth
+    description: Admin authentication
+  - name: admin-products
+    description: Admin product management
+  - name: admin-collections
+    description: Admin collection management
+  - name: admin-orders
+    description: Admin order management
+  - name: admin-settings
+    description: Admin settings
+  - name: admin-analytics
+    description: Admin analytics
+  - name: admin-content
+    description: Admin content management
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +49,839 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /store-config:
+    get:
+      operationId: getStoreConfig
+      tags: [store-config]
+      summary: Get store configuration
+      responses:
+        "200":
+          description: Store config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreConfig"
+
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List products
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+        - name: collectionSlug
+          in: query
+          schema:
+            type: string
+        - name: featured
+          in: query
+          schema:
+            type: boolean
+        - name: newArrival
+          in: query
+          schema:
+            type: boolean
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [newest, price_asc, price_desc, featured]
+        - name: minPrice
+          in: query
+          schema:
+            type: integer
+        - name: maxPrice
+          in: query
+          schema:
+            type: integer
+        - name: sizes
+          in: query
+          schema:
+            type: string
+        - name: colors
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductListResponse"
+
+  /products/{slug}:
+    get:
+      operationId: getProductBySlug
+      tags: [products]
+      summary: Get product by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /collections:
+    get:
+      operationId: listCollections
+      tags: [collections]
+      summary: List collections
+      responses:
+        "200":
+          description: List of collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Collection"
+
+  /collections/{slug}:
+    get:
+      operationId: getCollectionBySlug
+      tags: [collections]
+      summary: Get collection by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Collection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Collection"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /search:
+    get:
+      operationId: searchProducts
+      tags: [search]
+      summary: Search products
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductListResponse"
+
+  /orders:
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Create order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderBody"
+      responses:
+        "201":
+          description: Created order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get order by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /orders/user/{userId}:
+    get:
+      operationId: getUserOrders
+      tags: [orders]
+      summary: Get orders for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+
+  /wishlist/{userId}:
+    get:
+      operationId: getWishlist
+      tags: [wishlist]
+      summary: Get user wishlist
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Wishlist product IDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /wishlist/{userId}/{productId}:
+    post:
+      operationId: addToWishlist
+      tags: [wishlist]
+      summary: Add product to wishlist
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+    delete:
+      operationId: removeFromWishlist
+      tags: [wishlist]
+      summary: Remove product from wishlist
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/auth/login:
+    post:
+      operationId: adminLogin
+      tags: [admin-auth]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginBody"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/auth/logout:
+    post:
+      operationId: adminLogout
+      tags: [admin-auth]
+      summary: Admin logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/auth/check:
+    get:
+      operationId: adminAuthCheck
+      tags: [admin-auth]
+      summary: Check admin auth status
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/products:
+    get:
+      operationId: adminListProducts
+      tags: [admin-products]
+      summary: Admin - list all products
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: collectionId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Products list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProductListResponse"
+    post:
+      operationId: adminCreateProduct
+      tags: [admin-products]
+      summary: Admin - create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /admin/products/{id}:
+    get:
+      operationId: adminGetProduct
+      tags: [admin-products]
+      summary: Admin - get product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    patch:
+      operationId: adminUpdateProduct
+      tags: [admin-products]
+      summary: Admin - update product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: adminDeleteProduct
+      tags: [admin-products]
+      summary: Admin - delete product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/collections:
+    get:
+      operationId: adminListCollections
+      tags: [admin-collections]
+      summary: Admin - list all collections
+      responses:
+        "200":
+          description: Collections list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Collection"
+    post:
+      operationId: adminCreateCollection
+      tags: [admin-collections]
+      summary: Admin - create collection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCollectionBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Collection"
+
+  /admin/collections/{id}:
+    patch:
+      operationId: adminUpdateCollection
+      tags: [admin-collections]
+      summary: Admin - update collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCollectionBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Collection"
+    delete:
+      operationId: adminDeleteCollection
+      tags: [admin-collections]
+      summary: Admin - delete collection
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/orders:
+    get:
+      operationId: adminListOrders
+      tags: [admin-orders]
+      summary: Admin - list all orders
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Orders list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOrderListResponse"
+
+  /admin/orders/{id}:
+    get:
+      operationId: adminGetOrder
+      tags: [admin-orders]
+      summary: Admin - get order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+    patch:
+      operationId: adminUpdateOrder
+      tags: [admin-orders]
+      summary: Admin - update order status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrderBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+
+  /admin/store-config:
+    get:
+      operationId: adminGetStoreConfig
+      tags: [admin-settings]
+      summary: Admin - get store config
+      responses:
+        "200":
+          description: Store config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreConfig"
+    patch:
+      operationId: adminUpdateStoreConfig
+      tags: [admin-settings]
+      summary: Admin - update store config
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStoreConfigBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreConfig"
+
+  /admin/analytics:
+    get:
+      operationId: adminGetAnalytics
+      tags: [admin-analytics]
+      summary: Admin - get analytics dashboard
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsDashboard"
+
+  /admin/testimonials:
+    get:
+      operationId: adminListTestimonials
+      tags: [admin-content]
+      summary: Admin - list testimonials
+      responses:
+        "200":
+          description: Testimonials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Testimonial"
+    post:
+      operationId: adminCreateTestimonial
+      tags: [admin-content]
+      summary: Admin - create testimonial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTestimonialBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Testimonial"
+
+  /admin/testimonials/{id}:
+    patch:
+      operationId: adminUpdateTestimonial
+      tags: [admin-content]
+      summary: Admin - update testimonial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTestimonialBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Testimonial"
+    delete:
+      operationId: adminDeleteTestimonial
+      tags: [admin-content]
+      summary: Admin - delete testimonial
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/banners:
+    get:
+      operationId: adminListBanners
+      tags: [admin-content]
+      summary: Admin - list banners
+      responses:
+        "200":
+          description: Banners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Banner"
+    post:
+      operationId: adminCreateBanner
+      tags: [admin-content]
+      summary: Admin - create banner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBannerBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Banner"
+
+  /admin/banners/{id}:
+    patch:
+      operationId: adminUpdateBanner
+      tags: [admin-content]
+      summary: Admin - update banner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBannerBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Banner"
+    delete:
+      operationId: adminDeleteBanner
+      tags: [admin-content]
+      summary: Admin - delete banner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /testimonials:
+    get:
+      operationId: listTestimonials
+      tags: [store-config]
+      summary: List visible testimonials
+      responses:
+        "200":
+          description: Testimonials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Testimonial"
+
+  /payment/create-intent:
+    post:
+      operationId: createPaymentIntent
+      tags: [orders]
+      summary: Create Stripe payment intent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePaymentIntentBody"
+      responses:
+        "200":
+          description: Payment intent created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentIntentResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +889,869 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success]
+
+    SocialLinks:
+      type: object
+      properties:
+        instagram:
+          type: ["string", "null"]
+        facebook:
+          type: ["string", "null"]
+        tiktok:
+          type: ["string", "null"]
+        twitter:
+          type: ["string", "null"]
+
+    StoreConfig:
+      type: object
+      properties:
+        id:
+          type: string
+        storeName:
+          type: string
+        storeTagline:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        primaryColor:
+          type: string
+        secondaryColor:
+          type: string
+        accentColor:
+          type: string
+        currency:
+          type: string
+        currencySymbol:
+          type: string
+        locale:
+          type: string
+        socialLinks:
+          $ref: "#/components/schemas/SocialLinks"
+        contactEmail:
+          type: string
+        shippingThreshold:
+          type: integer
+        returnPolicy:
+          type: string
+        aboutText:
+          type: string
+        heroHeading:
+          type: string
+        heroSubheading:
+          type: string
+        heroImageUrl:
+          type: ["string", "null"]
+        announcementText:
+          type: string
+      required:
+        - id
+        - storeName
+        - storeTagline
+        - primaryColor
+        - secondaryColor
+        - accentColor
+        - currency
+        - currencySymbol
+        - locale
+        - shippingThreshold
+        - returnPolicy
+        - aboutText
+        - heroHeading
+        - heroSubheading
+        - announcementText
+
+    ProductImage:
+      type: object
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+        alt:
+          type: string
+        isPrimary:
+          type: boolean
+        sortOrder:
+          type: integer
+      required: [id, url, alt, isPrimary, sortOrder]
+
+    ProductVariant:
+      type: object
+      properties:
+        id:
+          type: string
+        size:
+          type: string
+        color:
+          type: string
+        colorHex:
+          type: string
+        sku:
+          type: string
+        stock:
+          type: integer
+        price:
+          type: integer
+        compareAtPrice:
+          type: ["integer", "null"]
+      required: [id, size, color, colorHex, sku, stock, price]
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        shortDescription:
+          type: string
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductImage"
+        variants:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductVariant"
+        collectionIds:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [active, draft, archived]
+        isFeatured:
+          type: boolean
+        isNewArrival:
+          type: boolean
+        basePrice:
+          type: integer
+        compareAtPrice:
+          type: ["integer", "null"]
+        material:
+          type: ["string", "null"]
+        careInstructions:
+          type: ["string", "null"]
+        weight:
+          type: ["integer", "null"]
+        metaTitle:
+          type: ["string", "null"]
+        metaDescription:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - slug
+        - name
+        - description
+        - shortDescription
+        - images
+        - variants
+        - collectionIds
+        - tags
+        - status
+        - isFeatured
+        - isNewArrival
+        - basePrice
+        - createdAt
+        - updatedAt
+
+    ProductListResponse:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
+      required: [products, total, page, pageSize, totalPages]
+
+    AdminProductListResponse:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
+      required: [products, total, page, pageSize, totalPages]
+
+    Collection:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        isFeatured:
+          type: boolean
+        sortOrder:
+          type: integer
+        productCount:
+          type: integer
+        metaTitle:
+          type: ["string", "null"]
+        metaDescription:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - slug
+        - name
+        - description
+        - isFeatured
+        - sortOrder
+        - productCount
+        - createdAt
+        - updatedAt
+
+    ShippingAddress:
+      type: object
+      properties:
+        fullName:
+          type: string
+        line1:
+          type: string
+        line2:
+          type: ["string", "null"]
+        city:
+          type: string
+        state:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+        phone:
+          type: string
+      required: [fullName, line1, city, state, postalCode, country, phone]
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+        productId:
+          type: string
+        variantId:
+          type: string
+        productName:
+          type: string
+        variantLabel:
+          type: string
+        imageUrl:
+          type: string
+        price:
+          type: integer
+        quantity:
+          type: integer
+        total:
+          type: integer
+      required:
+        - id
+        - productId
+        - variantId
+        - productName
+        - variantLabel
+        - imageUrl
+        - price
+        - quantity
+        - total
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        orderNumber:
+          type: string
+        userId:
+          type: string
+        status:
+          type: string
+          enum: [pending, confirmed, processing, shipped, delivered, cancelled, refunded]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        shippingAddress:
+          $ref: "#/components/schemas/ShippingAddress"
+        subtotal:
+          type: integer
+        shippingCost:
+          type: integer
+        tax:
+          type: integer
+        total:
+          type: integer
+        stripePaymentIntentId:
+          type: ["string", "null"]
+        trackingNumber:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - orderNumber
+        - userId
+        - status
+        - items
+        - shippingAddress
+        - subtotal
+        - shippingCost
+        - tax
+        - total
+        - createdAt
+        - updatedAt
+
+    AdminOrderListResponse:
+      type: object
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
+      required: [orders, total, page, pageSize, totalPages]
+
+    CreateOrderBody:
+      type: object
+      properties:
+        userId:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              variantId:
+                type: string
+              quantity:
+                type: integer
+            required: [variantId, quantity]
+        shippingAddress:
+          $ref: "#/components/schemas/ShippingAddress"
+        stripePaymentIntentId:
+          type: string
+      required: [userId, items, shippingAddress, stripePaymentIntentId]
+
+    UpdateOrderBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, confirmed, processing, shipped, delivered, cancelled, refunded]
+        trackingNumber:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+
+    CreateProductBody:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        shortDescription:
+          type: string
+        basePrice:
+          type: integer
+        compareAtPrice:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [active, draft, archived]
+        isFeatured:
+          type: boolean
+        isNewArrival:
+          type: boolean
+        material:
+          type: ["string", "null"]
+        careInstructions:
+          type: ["string", "null"]
+        weight:
+          type: ["integer", "null"]
+        metaTitle:
+          type: ["string", "null"]
+        metaDescription:
+          type: ["string", "null"]
+        collectionIds:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+              alt:
+                type: string
+              isPrimary:
+                type: boolean
+              sortOrder:
+                type: integer
+            required: [url, alt, isPrimary, sortOrder]
+        variants:
+          type: array
+          items:
+            type: object
+            properties:
+              size:
+                type: string
+              color:
+                type: string
+              colorHex:
+                type: string
+              sku:
+                type: string
+              stock:
+                type: integer
+              price:
+                type: integer
+              compareAtPrice:
+                type: ["integer", "null"]
+            required: [size, color, colorHex, sku, stock, price]
+      required: [name, slug, description, shortDescription, basePrice, status]
+
+    UpdateProductBody:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        shortDescription:
+          type: string
+        basePrice:
+          type: integer
+        compareAtPrice:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [active, draft, archived]
+        isFeatured:
+          type: boolean
+        isNewArrival:
+          type: boolean
+        material:
+          type: ["string", "null"]
+        careInstructions:
+          type: ["string", "null"]
+        weight:
+          type: ["integer", "null"]
+        metaTitle:
+          type: ["string", "null"]
+        metaDescription:
+          type: ["string", "null"]
+        collectionIds:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+              alt:
+                type: string
+              isPrimary:
+                type: boolean
+              sortOrder:
+                type: integer
+            required: [url, alt, isPrimary, sortOrder]
+        variants:
+          type: array
+          items:
+            type: object
+            properties:
+              size:
+                type: string
+              color:
+                type: string
+              colorHex:
+                type: string
+              sku:
+                type: string
+              stock:
+                type: integer
+              price:
+                type: integer
+              compareAtPrice:
+                type: ["integer", "null"]
+            required: [size, color, colorHex, sku, stock, price]
+
+    CreateCollectionBody:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        isFeatured:
+          type: boolean
+        sortOrder:
+          type: integer
+        metaTitle:
+          type: ["string", "null"]
+        metaDescription:
+          type: ["string", "null"]
+      required: [name, slug, description]
+
+    UpdateCollectionBody:
+      type: object
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        isFeatured:
+          type: boolean
+        sortOrder:
+          type: integer
+        metaTitle:
+          type: ["string", "null"]
+        metaDescription:
+          type: ["string", "null"]
+
+    UpdateStoreConfigBody:
+      type: object
+      properties:
+        storeName:
+          type: string
+        storeTagline:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        primaryColor:
+          type: string
+        secondaryColor:
+          type: string
+        accentColor:
+          type: string
+        currency:
+          type: string
+        currencySymbol:
+          type: string
+        locale:
+          type: string
+        socialLinks:
+          $ref: "#/components/schemas/SocialLinks"
+        contactEmail:
+          type: string
+        shippingThreshold:
+          type: integer
+        returnPolicy:
+          type: string
+        aboutText:
+          type: string
+        heroHeading:
+          type: string
+        heroSubheading:
+          type: string
+        heroImageUrl:
+          type: ["string", "null"]
+        announcementText:
+          type: string
+
+    AnalyticsDashboard:
+      type: object
+      properties:
+        totalRevenue:
+          type: integer
+        totalOrders:
+          type: integer
+        activeProducts:
+          type: integer
+        revenueByDay:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              revenue:
+                type: integer
+            required: [date, revenue]
+        ordersByStatus:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              count:
+                type: integer
+            required: [status, count]
+        topProducts:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: string
+              productName:
+                type: string
+              totalSold:
+                type: integer
+              revenue:
+                type: integer
+            required: [productId, productName, totalSold, revenue]
+        recentOrders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+        lowStockVariants:
+          type: array
+          items:
+            type: object
+            properties:
+              variantId:
+                type: string
+              productName:
+                type: string
+              size:
+                type: string
+              color:
+                type: string
+              stock:
+                type: integer
+            required: [variantId, productName, size, color, stock]
+      required:
+        - totalRevenue
+        - totalOrders
+        - activeProducts
+        - revenueByDay
+        - ordersByStatus
+        - topProducts
+        - recentOrders
+        - lowStockVariants
+
+    Testimonial:
+      type: object
+      properties:
+        id:
+          type: string
+        authorName:
+          type: string
+        authorLocation:
+          type: string
+        text:
+          type: string
+        rating:
+          type: integer
+        isVisible:
+          type: boolean
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+      required: [id, authorName, authorLocation, text, rating, isVisible, sortOrder, createdAt]
+
+    CreateTestimonialBody:
+      type: object
+      properties:
+        authorName:
+          type: string
+        authorLocation:
+          type: string
+        text:
+          type: string
+        rating:
+          type: integer
+        isVisible:
+          type: boolean
+        sortOrder:
+          type: integer
+      required: [authorName, text, rating]
+
+    UpdateTestimonialBody:
+      type: object
+      properties:
+        authorName:
+          type: string
+        authorLocation:
+          type: string
+        text:
+          type: string
+        rating:
+          type: integer
+        isVisible:
+          type: boolean
+        sortOrder:
+          type: integer
+
+    Banner:
+      type: object
+      properties:
+        id:
+          type: string
+        imageUrl:
+          type: string
+        heading:
+          type: string
+        subheading:
+          type: string
+        ctaText:
+          type: string
+        ctaUrl:
+          type: string
+        sortOrder:
+          type: integer
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, imageUrl, heading, subheading, ctaText, ctaUrl, sortOrder, isActive, createdAt]
+
+    CreateBannerBody:
+      type: object
+      properties:
+        imageUrl:
+          type: string
+        heading:
+          type: string
+        subheading:
+          type: string
+        ctaText:
+          type: string
+        ctaUrl:
+          type: string
+        sortOrder:
+          type: integer
+        isActive:
+          type: boolean
+      required: [imageUrl]
+
+    UpdateBannerBody:
+      type: object
+      properties:
+        imageUrl:
+          type: string
+        heading:
+          type: string
+        subheading:
+          type: string
+        ctaText:
+          type: string
+        ctaUrl:
+          type: string
+        sortOrder:
+          type: integer
+        isActive:
+          type: boolean
+
+    AdminLoginBody:
+      type: object
+      properties:
+        password:
+          type: string
+      required: [password]
+
+    CreatePaymentIntentBody:
+      type: object
+      properties:
+        amount:
+          type: integer
+        currency:
+          type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+      required: [amount, currency]
+
+    PaymentIntentResponse:
+      type: object
+      properties:
+        clientSecret:
+          type: string
+        paymentIntentId:
+          type: string
+      required: [clientSecret, paymentIntentId]
