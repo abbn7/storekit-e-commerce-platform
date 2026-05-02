@@ -5,33 +5,22 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 const rawPort = process.env.PORT;
+const isBuild = process.env.NODE_ENV === "production" || process.argv.includes("build");
 
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
-const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
+// During build we don't need PORT — only at dev/preview runtime
+const port = rawPort ? Number(rawPort) : 3000;
+if (rawPort && (Number.isNaN(port) || port <= 0)) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const basePath = process.env.BASE_PATH;
-
-if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
-}
+const basePath = process.env.BASE_PATH ?? "/";
 
 export default defineConfig({
   base: basePath,
   plugins: [
     react(),
     tailwindcss(),
-    runtimeErrorOverlay(),
+    ...(!isBuild ? [runtimeErrorOverlay()] : []),
     ...(process.env.NODE_ENV !== "production" &&
     process.env.REPL_ID !== undefined
       ? [
@@ -57,15 +46,23 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "framer-motion"],
+          clerk: ["@clerk/react"],
+          query: ["@tanstack/react-query"],
+          i18n: ["react-i18next", "i18next"],
+        },
+      },
+    },
   },
   server: {
     port,
     strictPort: true,
     host: "0.0.0.0",
     allowedHosts: true,
-    fs: {
-      strict: true,
-    },
+    fs: { strict: true },
   },
   preview: {
     port,

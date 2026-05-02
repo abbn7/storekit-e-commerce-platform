@@ -9,7 +9,9 @@ Full-stack luxury fashion e-commerce platform built as a pnpm workspace monorepo
 - **Monorepo**: pnpm workspaces
 - **Frontend**: React 19 + Vite, Wouter routing, Framer Motion, Zustand, Shadcn UI
 - **Backend**: Express 5, Drizzle ORM, PostgreSQL
-- **Auth**: Clerk v6 (storefront), password-based (admin)
+- **Auth**: Clerk v6 (storefront), password-based (admin, cookie: `sk_admin_session`)
+- **i18n**: react-i18next — English + Arabic (RTL) with localStorage persistence (`sk-lang`)
+- **Theme**: Dark/Light mode via ThemeContext, localStorage persistence (`sk-theme`)
 - **API**: Contract-first OpenAPI → Orval codegen (React Query hooks + Zod schemas)
 - **Styling**: Tailwind CSS v4, Cormorant Garamond / Inter / Bebas Neue fonts
 - **Node.js**: 24 | **TypeScript**: 5.9
@@ -29,69 +31,85 @@ Full-stack luxury fashion e-commerce platform built as a pnpm workspace monorepo
 
 ## Key Commands
 
-- `pnpm run typecheck` — full typecheck across all packages
+- `pnpm run typecheck` — full typecheck across all packages (0 errors)
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks from OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema (dev only)
+- `pnpm --filter @workspace/storekit build` — production build (succeeds without PORT env var)
 
 ## Storefront Pages
 
 - `/` — Homepage (hero, featured products, collections, testimonials)
 - `/collections` — All collections grid
 - `/collections/:slug` — Collection detail with product grid + sort
-- `/products/:slug` — Product detail (image gallery, variants, add to cart, wishlist)
-- `/cart` — Cart page with item list and totals
-- `/checkout` — 3-step checkout (shipping → review → payment)
-- `/order-confirmation/:id` — Order success page
-- `/search` — Product search
-- `/about` — Brand story page
+- `/products/:slug` — Product detail (size/color selector, add to cart/wishlist)
+- `/cart` — Cart page
+- `/checkout` — Checkout (Stripe)
+- `/order-confirmation/:id` — Order success
+- `/search` — Search
+- `/account` — Account (Clerk-protected)
+- `/account/orders` — Order history
+- `/account/wishlist` — Saved items
+- `/about` — About page
 - `/sign-in`, `/sign-up` — Clerk auth pages
-- `/account` — Account hub (requires auth)
-- `/account/orders` — Order history (requires auth)
-- `/account/wishlist` — Saved items (requires auth)
 
-## Admin Pages (password-protected)
+## Admin Dashboard
 
-- `/admin/login` — Admin login (password: `storekit2024` via `ADMIN_PASSWORD` env var)
-- `/admin` — Dashboard (analytics, revenue charts, low stock alerts)
-- `/admin/products` — Product CRUD
-- `/admin/collections` — Collection CRUD
-- `/admin/orders` — Order management
-- `/admin/settings` — Store configuration
-- `/admin/content` — Testimonials & banners
-- `/admin/analytics` — Full analytics view
+- `/admin/login` — Admin login (password: `storekit2024` / env: `ADMIN_PASSWORD`)
+- `/admin` — Analytics dashboard
+- `/admin/products` — Products CRUD
+- `/admin/collections` — Collections CRUD
+- `/admin/orders` — Orders management
+- `/admin/settings` — Store CMS (General/Hero/Colors/Social/Content tabs)
+- `/admin/content` — Testimonials + content management
+- `/admin/analytics` — Charts + metrics (Recharts)
 
-## Auth
+## i18n — Internationalization
 
-- **Storefront**: Clerk v6. Uses `useUser()` + `AuthGuard` component (wraps protected pages). `SignedIn`/`SignedOut` not available in v6.
-- **Admin**: Cookie-based (`sk_admin_session`). `ADMIN_PASSWORD` env var required. Frontend stores session in `localStorage` key `sk-admin-session`.
+- **Files**: `src/i18n/index.ts`, `src/i18n/locales/en.ts`, `src/i18n/locales/ar.ts`
+- **setLanguage(lang)** in `src/i18n/index.ts`: saves to localStorage, sets `html[lang]` + `html[dir]`
+- **RTL**: Arabic triggers `dir="rtl"` on `<html>`, CSS `[dir="rtl"]` applies Cairo font + letter-spacing:0
+- **Toggle**: Globe icon + "EN/AR" dropdown in Navbar (desktop & mobile)
 
-## Database Schema (lib/db/src/schema/)
+## Dark/Light Mode
 
-- `storeConfigTable` — Store settings, branding, hero content
-- `productsTable` + `productVariantsTable` + `productImagesTable` + `productTagsTable` + `productCollectionsTable`
-- `collectionsTable`
-- `ordersTable` + `orderItemsTable`
-- `testimonialsTable` + `bannersTable`
+- **Context**: `src/contexts/ThemeContext.tsx` — toggles `.dark` class on `<html>`
+- **Persistence**: localStorage key `sk-theme`
+- **System preference**: respects `prefers-color-scheme` as default
+- **Toggle**: Sun/Moon animated button in Navbar (desktop & mobile)
+- **CSS**: Full `.dark` color palette in `src/index.css` (deep navy `--background: 222 18% 8%`)
 
-## Shared Libraries
+## Key Source Files
 
-- `lib/db` — Drizzle ORM schema + DB connection (`@workspace/db`)
-- `lib/api-spec` — OpenAPI YAML spec (`@workspace/api-spec`)
-- `lib/api-zod` — Generated Zod schemas (`@workspace/api-zod`)
-- `lib/api-client-react` — Generated React Query hooks (`@workspace/api-client-react`)
+- `artifacts/storekit/src/App.tsx` — Root: I18nextProvider + ThemeProvider + ClerkProvider
+- `artifacts/storekit/src/components/Navbar.tsx` — Full navbar with all toggles
+- `artifacts/storekit/src/i18n/index.ts` — i18next setup
+- `artifacts/storekit/src/contexts/ThemeContext.tsx` — Dark mode context
+- `artifacts/storekit/src/index.css` — Full color system (light+dark) + glass utilities + RTL
+- `artifacts/storekit/vite.config.ts` — PORT optional at build time, code splitting
 
-## Design Tokens
+## Data & Pricing
 
-- Gold accent: `--color-accent-gold: #c9a96e` (CSS var + Tailwind `accent`)
-- Display font: Cormorant Garamond (`--font-display`)
-- Body font: Inter
-- Accent font: Bebas Neue (`--font-accent`)
-- Prices stored in **cents** — use `formatPrice()` from `src/lib/utils.ts`
+- Prices stored in **cents** (divide by 100 for display)
+- Helpers: `formatPrice()`, `getProductImage()`, `slugify()` in `src/lib/utils.ts`
+- DB seeded: 8 products, 5 collections, store config, 5 testimonials
 
-## Environment Variables
+## Deployment
 
-- `VITE_CLERK_PUBLISHABLE_KEY` — Clerk public key (shared)
-- `CLERK_SECRET_KEY` — Clerk secret (secret)
-- `ADMIN_PASSWORD` — Admin dashboard password (shared, default: `storekit2024`)
-- `DATABASE_URL` — PostgreSQL connection (runtime-managed)
-- `SESSION_SECRET` — Express session secret
+- **Replit Deploy**: Click Deploy button — all env vars pre-configured
+- **Vercel**: See `DEPLOY.md` for step-by-step guide (including iPhone deployment)
+- **vercel.json**: at repo root, configured for monorepo build
+- Build command: `pnpm --filter @workspace/storekit build` (no PORT required)
+- Output: `artifacts/storekit/dist/public/`
+
+## Required Env Vars (Production)
+
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `SESSION_SECRET` | Session signing key |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk frontend key |
+| `CLERK_SECRET_KEY` | Clerk backend key |
+| `STRIPE_SECRET_KEY` | Stripe payments |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe frontend |
+| `ADMIN_PASSWORD` | Admin dashboard password |
+| `NODE_ENV` | `production` |

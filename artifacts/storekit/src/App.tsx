@@ -4,6 +4,9 @@ import { ClerkProvider } from "@clerk/react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AnimatePresence, motion } from "framer-motion";
+import { I18nextProvider } from "react-i18next";
+import i18n from "@/i18n";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { pageVariants } from "@/lib/animations";
 import NotFound from "@/pages/not-found";
 import HomePage from "@/pages/HomePage";
@@ -104,14 +107,18 @@ function ClerkAwareRouter() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <ClerkAwareRouter />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <I18nextProvider i18n={i18n}>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <ClerkAwareRouter />
+            </WouterRouter>
+            <Toaster />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </I18nextProvider>
   );
 }
 
