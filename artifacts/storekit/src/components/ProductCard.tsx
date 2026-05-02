@@ -1,10 +1,11 @@
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag, Eye } from "lucide-react";
 import { useState } from "react";
 import { formatPrice, getProductImage } from "@/lib/utils";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useCartStore } from "@/store/cartStore";
+import { useQuickViewStore } from "@/store/quickViewStore";
 import { luxury, staggerItem } from "@/lib/animations";
 
 interface ProductCardProps {
@@ -30,6 +31,7 @@ export default function ProductCard({
   const [addedVariantId, setAddedVariantId] = useState<string | null>(null);
   const { isInWishlist, addItem: addToWishlist, removeItem: removeFromWishlist } = useWishlistStore();
   const { addItem, openCart } = useCartStore();
+  const { open: openQuickView } = useQuickViewStore();
   const inWishlist = isInWishlist(id);
 
   const primaryImage = images[0]?.url ? getProductImage(images[0].url) : getProductImage(null, id);
@@ -152,6 +154,23 @@ export default function ProductCard({
             >
               <Heart className={`w-4 h-4 transition-colors duration-200 ${inWishlist ? "fill-foreground text-foreground" : "text-foreground"}`} />
             </motion.div>
+          </motion.button>
+
+          {/* Quick View button */}
+          <motion.button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              openQuickView({ id, slug, name, basePrice, compareAtPrice, images, variants, isFeatured, isNewArrival });
+            }}
+            className="absolute top-3 right-12 z-10 p-2 bg-background/90 backdrop-blur-sm"
+            animate={{ opacity: isHovered ? 1 : 0, scale: isHovered ? 1 : 0.85 }}
+            transition={{ duration: 0.25, ease: luxury, delay: 0.04 }}
+            whileTap={{ scale: 0.9 }}
+            aria-label="Quick view"
+            title="Quick View"
+          >
+            <Eye className="w-4 h-4 text-foreground" />
           </motion.button>
 
           {/* Quick add panel */}

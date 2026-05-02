@@ -37,6 +37,7 @@ import AdminSettingsPage from "@/pages/admin/AdminSettingsPage";
 import AdminContentPage from "@/pages/admin/AdminContentPage";
 import AdminAnalyticsPage from "@/pages/admin/AdminAnalyticsPage";
 import CartDrawer from "@/components/CartDrawer";
+import QuickViewModal from "@/components/QuickViewModal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -110,6 +111,7 @@ function ClerkAwareRouter() {
     >
       <AnimatedRoutes />
       <CartDrawer />
+      <QuickViewModal />
     </ClerkProvider>
   );
 }
