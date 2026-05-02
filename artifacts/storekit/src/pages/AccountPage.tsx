@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { SignedIn, SignedOut, RedirectToSignIn, useUser, UserButton } from "@clerk/react";
-import { Package, Heart, Settings, ChevronRight } from "lucide-react";
+import { AuthGuard } from "@/components/AuthGuard";
+import { useUser, UserButton } from "@clerk/react";
+import { Package, Heart, ChevronRight } from "lucide-react";
 
 function AccountContent() {
   const { user } = useUser();
@@ -51,10 +52,5 @@ function AccountContent() {
 }
 
 export default function AccountPage() {
-  return (
-    <>
-      <SignedIn><AccountContent /></SignedIn>
-      <SignedOut><RedirectToSignIn /></SignedOut>
-    </>
-  );
+  return <AuthGuard><AccountContent /></AuthGuard>;
 }

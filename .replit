@@ -35,3 +35,4 @@ externalPort = 3000
 
 [userenv.shared]
 VITE_CLERK_PUBLISHABLE_KEY = "pk_test_bmljZS1nb3NoYXdrLTUzLmNsZXJrLmFjY291bnRzLmRldiQ"
+ADMIN_PASSWORD = "storekit2024"

@@ -4,7 +4,7 @@ import Layout from "@/components/Layout";
 export default function SignUpPage() {
   return (
     <Layout noFooter>
-      <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="font-display text-4xl font-light" style={{ fontFamily: "var(--font-display)" }}>
@@ -13,8 +13,6 @@ export default function SignUpPage() {
             <p className="text-sm text-muted-foreground mt-2">Join to unlock exclusive access and order tracking</p>
           </div>
           <SignUp
-            routing="path"
-            path="/sign-up"
             afterSignUpUrl="/"
             appearance={{
               elements: {

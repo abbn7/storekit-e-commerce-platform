@@ -4,7 +4,7 @@ import Layout from "@/components/Layout";
 export default function SignInPage() {
   return (
     <Layout noFooter>
-      <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="font-display text-4xl font-light" style={{ fontFamily: "var(--font-display)" }}>
@@ -13,8 +13,6 @@ export default function SignInPage() {
             <p className="text-sm text-muted-foreground mt-2">Sign in to your account to continue</p>
           </div>
           <SignIn
-            routing="path"
-            path="/sign-in"
             afterSignInUrl="/"
             appearance={{
               elements: {

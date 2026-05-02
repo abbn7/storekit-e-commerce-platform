@@ -2,10 +2,11 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
+import { AuthGuard } from "@/components/AuthGuard";
 import { useCartStore } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 import { useCreateOrder, useCreatePaymentIntent } from "@workspace/api-client-react";
-import { useUser, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/react";
+import { useUser } from "@clerk/react";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -17,19 +18,6 @@ interface ShippingForm {
   fullName: string; email: string; phone: string;
   line1: string; line2: string; city: string;
   state: string; postalCode: string; country: string;
-}
-
-export default function CheckoutPage() {
-  return (
-    <>
-      <SignedIn>
-        <CheckoutContent />
-      </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn />
-      </SignedOut>
-    </>
-  );
 }
 
 function CheckoutContent() {
@@ -117,12 +105,7 @@ function CheckoutContent() {
   return (
     <Layout>
       <div className="max-w-5xl mx-auto px-6 lg:px-8 py-12">
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="font-display text-4xl font-light mb-10"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
+        <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="font-display text-4xl font-light mb-10" style={{ fontFamily: "var(--font-display)" }}>
           Checkout
         </motion.h1>
 
@@ -130,17 +113,8 @@ function CheckoutContent() {
         <div className="flex items-center gap-0 mb-12">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center gap-0">
-              <button
-                onClick={() => i < step && setStep(i)}
-                className={`flex items-center gap-2 text-xs tracking-[0.15em] uppercase transition-colors ${
-                  i === step ? "text-foreground font-medium" : i < step ? "text-accent cursor-pointer" : "text-muted-foreground"
-                }`}
-              >
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] border transition-colors ${
-                  i === step ? "bg-foreground text-background border-foreground"
-                    : i < step ? "bg-accent text-accent-foreground border-accent"
-                      : "border-border text-muted-foreground"
-                }`}>
+              <button onClick={() => i < step && setStep(i)} className={`flex items-center gap-2 text-xs tracking-[0.15em] uppercase transition-colors ${i === step ? "text-foreground font-medium" : i < step ? "text-accent cursor-pointer" : "text-muted-foreground"}`}>
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] border transition-colors ${i === step ? "bg-foreground text-background border-foreground" : i < step ? "bg-accent text-accent-foreground border-accent" : "border-border text-muted-foreground"}`}>
                   {i < step ? "✓" : i + 1}
                 </span>
                 {s}
@@ -151,56 +125,21 @@ function CheckoutContent() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Form area */}
           <div className="lg:col-span-2">
             <AnimatePresence mode="wait">
               {step === 0 && (
-                <motion.form
-                  key="shipping"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  onSubmit={handleShippingSubmit}
-                  className="space-y-4"
-                >
+                <motion.form key="shipping" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} onSubmit={handleShippingSubmit} className="space-y-4">
                   <h2 className="font-medium tracking-wide mb-6">Shipping Address</h2>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5 col-span-2">
-                      <Label htmlFor="fullName">Full Name *</Label>
-                      <Input id="fullName" value={shipping.fullName} onChange={e => setShipping(s => ({ ...s, fullName: e.target.value }))} required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" value={shipping.email} onChange={e => setShipping(s => ({ ...s, email: e.target.value }))} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="phone">Phone</Label>
-                      <Input id="phone" value={shipping.phone} onChange={e => setShipping(s => ({ ...s, phone: e.target.value }))} />
-                    </div>
-                    <div className="space-y-1.5 col-span-2">
-                      <Label htmlFor="line1">Address *</Label>
-                      <Input id="line1" value={shipping.line1} onChange={e => setShipping(s => ({ ...s, line1: e.target.value }))} required />
-                    </div>
-                    <div className="space-y-1.5 col-span-2">
-                      <Label htmlFor="line2">Apartment, suite, etc.</Label>
-                      <Input id="line2" value={shipping.line2} onChange={e => setShipping(s => ({ ...s, line2: e.target.value }))} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="city">City *</Label>
-                      <Input id="city" value={shipping.city} onChange={e => setShipping(s => ({ ...s, city: e.target.value }))} required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="state">State</Label>
-                      <Input id="state" value={shipping.state} onChange={e => setShipping(s => ({ ...s, state: e.target.value }))} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="postalCode">Postal Code *</Label>
-                      <Input id="postalCode" value={shipping.postalCode} onChange={e => setShipping(s => ({ ...s, postalCode: e.target.value }))} required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="country">Country</Label>
-                      <Input id="country" value={shipping.country} onChange={e => setShipping(s => ({ ...s, country: e.target.value }))} />
-                    </div>
+                    <div className="space-y-1.5 col-span-2"><Label>Full Name *</Label><Input value={shipping.fullName} onChange={e => setShipping(s => ({ ...s, fullName: e.target.value }))} required /></div>
+                    <div className="space-y-1.5"><Label>Email</Label><Input type="email" value={shipping.email} onChange={e => setShipping(s => ({ ...s, email: e.target.value }))} /></div>
+                    <div className="space-y-1.5"><Label>Phone</Label><Input value={shipping.phone} onChange={e => setShipping(s => ({ ...s, phone: e.target.value }))} /></div>
+                    <div className="space-y-1.5 col-span-2"><Label>Address *</Label><Input value={shipping.line1} onChange={e => setShipping(s => ({ ...s, line1: e.target.value }))} required /></div>
+                    <div className="space-y-1.5 col-span-2"><Label>Apartment, suite, etc.</Label><Input value={shipping.line2} onChange={e => setShipping(s => ({ ...s, line2: e.target.value }))} /></div>
+                    <div className="space-y-1.5"><Label>City *</Label><Input value={shipping.city} onChange={e => setShipping(s => ({ ...s, city: e.target.value }))} required /></div>
+                    <div className="space-y-1.5"><Label>State</Label><Input value={shipping.state} onChange={e => setShipping(s => ({ ...s, state: e.target.value }))} /></div>
+                    <div className="space-y-1.5"><Label>Postal Code *</Label><Input value={shipping.postalCode} onChange={e => setShipping(s => ({ ...s, postalCode: e.target.value }))} required /></div>
+                    <div className="space-y-1.5"><Label>Country</Label><Input value={shipping.country} onChange={e => setShipping(s => ({ ...s, country: e.target.value }))} /></div>
                   </div>
                   <button type="submit" className="flex items-center justify-center gap-2 w-full bg-foreground text-background py-4 text-xs tracking-[0.2em] uppercase hover:bg-foreground/80 transition-colors mt-6">
                     Continue to Review <ArrowRight className="w-4 h-4" />
@@ -209,12 +148,7 @@ function CheckoutContent() {
               )}
 
               {step === 1 && (
-                <motion.div
-                  key="review"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                >
+                <motion.div key="review" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <h2 className="font-medium tracking-wide mb-6">Review Your Order</h2>
                   <div className="space-y-4 mb-8">
                     {items.map(item => (
@@ -250,38 +184,18 @@ function CheckoutContent() {
               )}
 
               {step === 2 && (
-                <motion.form
-                  key="payment"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  onSubmit={handlePlaceOrder}
-                  className="space-y-4"
-                >
+                <motion.form key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} onSubmit={handlePlaceOrder} className="space-y-4">
                   <h2 className="font-medium tracking-wide mb-6">Payment Details</h2>
                   <div className="space-y-1.5">
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      value={cardNumber}
-                      onChange={e => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})/g, "$1 ").trim())}
-                      maxLength={19}
-                    />
+                    <Label>Card Number</Label>
+                    <Input placeholder="1234 5678 9012 3456" value={cardNumber} onChange={e => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})/g, "$1 ").trim())} maxLength={19} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="expiry">Expiry</Label>
-                      <Input id="expiry" placeholder="MM/YY" value={expiry} onChange={e => setExpiry(e.target.value)} maxLength={5} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="cvc">CVC</Label>
-                      <Input id="cvc" placeholder="123" value={cvc} onChange={e => setCvc(e.target.value)} maxLength={4} />
-                    </div>
+                    <div className="space-y-1.5"><Label>Expiry</Label><Input placeholder="MM/YY" value={expiry} onChange={e => setExpiry(e.target.value)} maxLength={5} /></div>
+                    <div className="space-y-1.5"><Label>CVC</Label><Input placeholder="123" value={cvc} onChange={e => setCvc(e.target.value)} maxLength={4} /></div>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Your payment information is secure and encrypted</span>
+                    <Lock className="w-3.5 h-3.5" /><span>Your payment information is secure and encrypted</span>
                   </div>
                   <div className="flex gap-3 mt-4">
                     <button type="button" onClick={() => setStep(1)} className="flex items-center gap-2 px-6 py-4 border border-border text-xs tracking-[0.15em] uppercase hover:bg-muted transition-colors">
@@ -296,7 +210,6 @@ function CheckoutContent() {
             </AnimatePresence>
           </div>
 
-          {/* Order summary sidebar */}
           <div className="bg-card border border-border p-6 h-fit">
             <h3 className="text-sm font-medium tracking-[0.1em] uppercase mb-5">Summary</h3>
             <div className="space-y-2.5 text-sm mb-5 pb-5 border-b border-border">
@@ -310,4 +223,8 @@ function CheckoutContent() {
       </div>
     </Layout>
   );
+}
+
+export default function CheckoutPage() {
+  return <AuthGuard><CheckoutContent /></AuthGuard>;
 }

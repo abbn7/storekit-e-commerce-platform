@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/react";
+import { AuthGuard } from "@/components/AuthGuard";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useListProducts } from "@workspace/api-client-react";
 import ProductCard from "@/components/ProductCard";
@@ -58,10 +58,5 @@ function WishlistContent() {
 }
 
 export default function AccountWishlistPage() {
-  return (
-    <>
-      <SignedIn><WishlistContent /></SignedIn>
-      <SignedOut><RedirectToSignIn /></SignedOut>
-    </>
-  );
+  return <AuthGuard><WishlistContent /></AuthGuard>;
 }

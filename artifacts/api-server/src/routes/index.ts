@@ -7,6 +7,7 @@ import searchRouter from "./search";
 import ordersRouter from "./orders";
 import wishlistRouter from "./wishlist";
 import paymentRouter from "./payment";
+import testimonialsRouter from "./testimonials";
 import adminAuthRouter from "./admin/auth";
 import adminProductsRouter from "./admin/products";
 import adminCollectionsRouter from "./admin/collections";
@@ -25,6 +26,7 @@ router.use("/search", searchRouter);
 router.use("/orders", ordersRouter);
 router.use("/wishlist", wishlistRouter);
 router.use("/payments", paymentRouter);
+router.use("/testimonials", testimonialsRouter);
 
 // Admin routes
 router.use("/admin/auth", adminAuthRouter);
