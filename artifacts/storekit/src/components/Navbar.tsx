@@ -48,6 +48,7 @@ export default function Navbar() {
   const navLinks = [
     { label: t("nav.collections"),  href: "/collections" },
     { label: t("nav.newArrivals"),   href: "/collections/new-arrivals" },
+    { label: "Lookbook",             href: "/lookbook" },
     { label: t("nav.about"),         href: "/about" },
   ];
 

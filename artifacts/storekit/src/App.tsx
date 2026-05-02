@@ -23,6 +23,7 @@ import AccountPage from "@/pages/AccountPage";
 import AccountOrdersPage from "@/pages/AccountOrdersPage";
 import AccountWishlistPage from "@/pages/AccountWishlistPage";
 import AboutPage from "@/pages/AboutPage";
+import LookbookPage from "@/pages/LookbookPage";
 import SignInPage from "@/pages/SignInPage";
 import SignUpPage from "@/pages/SignUpPage";
 import AdminLoginPage from "@/pages/admin/AdminLoginPage";
@@ -75,6 +76,7 @@ function AnimatedRoutes() {
             <Route path="/account" component={AccountPage} />
             <Route path="/account/orders" component={AccountOrdersPage} />
             <Route path="/account/wishlist" component={AccountWishlistPage} />
+            <Route path="/lookbook" component={LookbookPage} />
             <Route path="/about" component={AboutPage} />
             <Route path="/sign-in" component={SignInPage} />
             <Route path="/sign-up" component={SignUpPage} />
