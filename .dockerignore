@@ -1,0 +1,26 @@
+# ── node_modules (Docker installs its own) ──────────────────────────────────
+**/node_modules
+
+# ── Build outputs (Docker rebuilds from source) ──────────────────────────────
+**/dist
+**/.replit-artifact
+
+# ── Dev / Replit-specific files ───────────────────────────────────────────────
+.replit
+.replitignore
+replit.md
+attached_assets
+
+# ── Git and editor files ──────────────────────────────────────────────────────
+.git
+.gitignore
+*.md
+!DEPLOY.md
+
+# ── Local env files (never bake secrets into image) ──────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Uploads (managed as a volume at runtime) ─────────────────────────────────
+artifacts/api-server/uploads
