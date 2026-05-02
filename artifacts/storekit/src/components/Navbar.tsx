@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Search, Heart, User, Menu, X } from "lucide-react";
+import { ShoppingBag, Search, Heart, User, Menu, X, LayoutDashboard } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useGetStoreConfig } from "@workspace/api-client-react";
@@ -89,6 +89,9 @@ export default function Navbar() {
               </Link>
               <Link href="/account" className="p-1 text-foreground/70 hover:text-foreground transition-colors">
                 <User className="w-5 h-5" />
+              </Link>
+              <Link href="/admin" className="p-1 text-foreground/40 hover:text-foreground/70 transition-colors" title="Admin Panel">
+                <LayoutDashboard className="w-4 h-4" />
               </Link>
               <button
                 onClick={openCart}

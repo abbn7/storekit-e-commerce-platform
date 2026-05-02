@@ -109,12 +109,15 @@ export default function Footer() {
           <p className="text-xs text-background/30">
             &copy; {new Date().getFullYear()} {config?.storeName ?? "StoreKit"}. All rights reserved.
           </p>
-          <div className="flex gap-6">
+          <div className="flex gap-6 items-center">
             {["Privacy", "Terms", "Returns", "Contact"].map(item => (
               <a key={item} href="#" className="text-xs text-background/30 hover:text-background/60 transition-colors tracking-wide">
                 {item}
               </a>
             ))}
+            <Link href="/admin" className="text-xs text-background/20 hover:text-background/50 transition-colors tracking-[0.15em] uppercase border-l border-background/10 pl-6">
+              Admin
+            </Link>
           </div>
         </div>
       </div>
