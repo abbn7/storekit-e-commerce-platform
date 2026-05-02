@@ -210,6 +210,77 @@ export function buildOrderConfirmationHtml(order: {
 </html>`;
 }
 
+export function buildBackInStockHtml(data: {
+  productName: string;
+  variantLabel: string;
+  productSlug: string;
+  price: number;
+}, storeName = "STOREKIT"): string {
+  const productUrl = `${process.env.STORE_URL ?? "https://storekit.replit.app"}/products/${data.productSlug}`;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:0;background-color:#f7f4f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f7f4f0;min-height:100vh;">
+    <tr><td align="center" style="padding:40px 20px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;">
+        <tr><td style="background:#1a1a1a;padding:32px 40px;text-align:center;">
+          <p style="margin:0;font-size:20px;font-weight:300;letter-spacing:0.35em;color:#ffffff;text-transform:uppercase;">${storeName}</p>
+          <p style="margin:8px 0 0;font-size:10px;letter-spacing:0.2em;color:#a8956d;text-transform:uppercase;">Back in Stock</p>
+        </td></tr>
+        <tr><td style="background:#ffffff;padding:40px;text-align:center;border-bottom:1px solid #f0ede8;">
+          <p style="margin:0 0 8px;font-size:32px;">🔔</p>
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.25em;color:#a8956d;text-transform:uppercase;">Good news</p>
+          <h1 style="margin:0 0 16px;font-size:26px;font-weight:300;color:#1a1a1a;">It's back!</h1>
+          <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
+            <strong style="color:#1a1a1a;">${data.productName}</strong> in <strong style="color:#1a1a1a;">${data.variantLabel}</strong> is back in stock.
+            Order soon — it may sell out again quickly.
+          </p>
+          <p style="margin:0 0 28px;font-size:18px;font-weight:600;color:#1a1a1a;">$${(data.price / 100).toFixed(2)}</p>
+          <a href="${productUrl}" style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;padding:14px 36px;">
+            Shop Now
+          </a>
+        </td></tr>
+        <tr><td style="background:#1a1a1a;padding:24px 40px;text-align:center;">
+          <p style="margin:0;font-size:11px;letter-spacing:0.2em;color:#a8956d;text-transform:uppercase;">${storeName}</p>
+          <p style="margin:8px 0 0;font-size:11px;color:#6b7280;">You requested this alert. Questions? Contact our support team.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendBackInStockEmail(data: {
+  email: string;
+  productName: string;
+  variantLabel: string;
+  productSlug: string;
+  price: number;
+}, storeName = "STOREKIT"): Promise<void> {
+  try {
+    const transport = await getTransporter();
+    const from = process.env.SMTP_FROM ?? `"${storeName}" <noreply@storekit.app>`;
+    const html = buildBackInStockHtml(data, storeName);
+    const info = await transport.sendMail({
+      from,
+      to: data.email,
+      subject: `${data.productName} is back in stock — ${storeName}`,
+      html,
+    });
+    const previewUrl = nodemailer.getTestMessageUrl(info);
+    if (previewUrl) {
+      logger.info({ previewUrl, email: data.email }, "📧 Back-in-stock email preview (Ethereal)");
+    } else {
+      logger.info({ messageId: info.messageId }, "📧 Back-in-stock email sent");
+    }
+  } catch (err) {
+    logger.error({ err }, "Failed to send back-in-stock email");
+    throw err;
+  }
+}
+
 export async function sendOrderConfirmation(
   order: Parameters<typeof buildOrderConfirmationHtml>[0],
   customerEmail: string,

@@ -15,6 +15,7 @@ import SizeGuide from "@/components/SizeGuide";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import ProductCard from "@/components/ProductCard";
 import ReviewSection from "@/components/ReviewSection";
+import NotifyMeButton from "@/components/NotifyMeButton";
 
 function Skeleton() {
   return (
@@ -406,6 +407,25 @@ export default function ProductDetailPage() {
                   </motion.div>
                 </motion.button>
               </div>
+
+              {/* Notify Me — shown when a variant is out of stock */}
+              <AnimatePresence>
+                {selectedVariant && !isInStock && (
+                  <motion.div
+                    key={selectedVariant.id}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <NotifyMeButton
+                      variantId={selectedVariant.id}
+                      productId={product.id}
+                      variantLabel={`${selectedVariant.size} / ${selectedVariant.color}`}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
 
             {/* Trust badges */}

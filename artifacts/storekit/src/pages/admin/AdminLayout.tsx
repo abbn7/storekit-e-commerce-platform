@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   LayoutDashboard, Package, FolderOpen, ShoppingCart,
   Settings, FileText, BarChart2, LogOut, ExternalLink,
-  Sparkles, BookImage, Tag, Star,
+  Sparkles, BookImage, Tag, Star, Bell,
 } from "lucide-react";
 import { useAdminLogout } from "@workspace/api-client-react";
 
@@ -16,6 +16,7 @@ const navItems = [
   { label: "Lookbook",    href: "/admin/lookbook",     icon: BookImage },
   { label: "Promo Codes", href: "/admin/promo-codes",  icon: Tag },
   { label: "Reviews",     href: "/admin/reviews",      icon: Star },
+  { label: "Stock Alerts",href: "/admin/stock-alerts", icon: Bell },
   { label: "Content",     href: "/admin/content",      icon: FileText },
   { label: "Settings",    href: "/admin/settings",     icon: Settings },
 ];

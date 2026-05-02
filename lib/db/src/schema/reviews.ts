@@ -1,5 +1,6 @@
 import { pgTable, uuid, text, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { productsTable } from "./products";
+import { productVariantsTable } from "./products";
 
 export const productReviewsTable = pgTable("product_reviews", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -11,6 +12,17 @@ export const productReviewsTable = pgTable("product_reviews", {
   body: text("body").default(""),
   isVerifiedPurchase: boolean("is_verified_purchase").default(false),
   isApproved: boolean("is_approved").default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const stockAlertsTable = pgTable("stock_alerts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  variantId: uuid("variant_id").references(() => productVariantsTable.id, { onDelete: "cascade" }).notNull(),
+  productId: uuid("product_id").references(() => productsTable.id, { onDelete: "cascade" }).notNull(),
+  email: text("email").notNull(),
+  userId: text("user_id"),
+  isNotified: boolean("is_notified").default(false),
+  notifiedAt: timestamp("notified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

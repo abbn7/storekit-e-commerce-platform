@@ -41,6 +41,7 @@ import AdminLookbookPage from "@/pages/admin/AdminLookbookPage";
 import AdminLookbookFormPage from "@/pages/admin/AdminLookbookFormPage";
 import AdminPromoCodesPage from "@/pages/admin/AdminPromoCodesPage";
 import AdminReviewsPage from "@/pages/admin/AdminReviewsPage";
+import AdminStockAlertsPage from "@/pages/admin/AdminStockAlertsPage";
 import CartDrawer from "@/components/CartDrawer";
 import QuickViewModal from "@/components/QuickViewModal";
 import CompareBar from "@/components/CompareBar";
@@ -102,6 +103,7 @@ function AnimatedRoutes() {
             <Route path="/admin/analytics" component={AdminAnalyticsPage} />
             <Route path="/admin/promo-codes" component={AdminPromoCodesPage} />
             <Route path="/admin/reviews" component={AdminReviewsPage} />
+            <Route path="/admin/stock-alerts" component={AdminStockAlertsPage} />
             <Route component={NotFound} />
           </Switch>
         </motion.div>
