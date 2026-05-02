@@ -14,6 +14,7 @@ import { luxury, staggerItem, staggerContainer } from "@/lib/animations";
 import SizeGuide from "@/components/SizeGuide";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import ProductCard from "@/components/ProductCard";
+import ReviewSection from "@/components/ReviewSection";
 
 function Skeleton() {
   return (
@@ -451,6 +452,9 @@ export default function ProductDetailPage() {
             </motion.div>
           </div>
         </div>
+
+        {/* ── Reviews ─────────────────────────────────────── */}
+        {product && <ReviewSection productId={product.id} />}
 
         {/* ── Related Products ─────────────────────────────── */}
         {relatedProducts.length > 0 && (
