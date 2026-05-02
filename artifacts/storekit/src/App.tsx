@@ -37,6 +37,8 @@ import AdminOrderDetailPage from "@/pages/admin/AdminOrderDetailPage";
 import AdminSettingsPage from "@/pages/admin/AdminSettingsPage";
 import AdminContentPage from "@/pages/admin/AdminContentPage";
 import AdminAnalyticsPage from "@/pages/admin/AdminAnalyticsPage";
+import AdminLookbookPage from "@/pages/admin/AdminLookbookPage";
+import AdminLookbookFormPage from "@/pages/admin/AdminLookbookFormPage";
 import CartDrawer from "@/components/CartDrawer";
 import QuickViewModal from "@/components/QuickViewModal";
 import CompareBar from "@/components/CompareBar";
@@ -91,6 +93,9 @@ function AnimatedRoutes() {
             <Route path="/admin/orders" component={AdminOrdersPage} />
             <Route path="/admin/orders/:id" component={AdminOrderDetailPage} />
             <Route path="/admin/settings" component={AdminSettingsPage} />
+            <Route path="/admin/lookbook" component={AdminLookbookPage} />
+            <Route path="/admin/lookbook/new" component={AdminLookbookFormPage} />
+            <Route path="/admin/lookbook/:id/edit" component={AdminLookbookFormPage} />
             <Route path="/admin/content" component={AdminContentPage} />
             <Route path="/admin/analytics" component={AdminAnalyticsPage} />
             <Route component={NotFound} />

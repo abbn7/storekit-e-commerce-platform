@@ -17,6 +17,7 @@ import adminOrdersRouter from "./admin/orders";
 import adminSettingsRouter from "./admin/settings";
 import adminAnalyticsRouter from "./admin/analytics";
 import adminContentRouter from "./admin/content";
+import adminLookbookRouter from "./admin/lookbook";
 
 const router: IRouter = Router();
 
@@ -40,5 +41,6 @@ router.use("/admin/orders", adminOrdersRouter);
 router.use("/admin/settings", adminSettingsRouter);
 router.use("/admin/analytics", adminAnalyticsRouter);
 router.use("/admin/content", adminContentRouter);
+router.use("/admin/lookbook", adminLookbookRouter);
 
 export default router;
