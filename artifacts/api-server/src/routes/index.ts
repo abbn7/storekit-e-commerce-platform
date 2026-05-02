@@ -19,6 +19,10 @@ import adminAnalyticsRouter from "./admin/analytics";
 import adminContentRouter from "./admin/content";
 import adminLookbookRouter from "./admin/lookbook";
 import adminEmailPreviewRouter from "./admin/email-preview";
+import reviewsRouter from "./reviews";
+import promoRouter from "./promo";
+import adminReviewsRouter from "./admin/reviews";
+import adminPromoCodesRouter from "./admin/promo-codes";
 
 const router: IRouter = Router();
 
@@ -33,6 +37,8 @@ router.use("/wishlist", wishlistRouter);
 router.use("/payments", paymentRouter);
 router.use("/testimonials", testimonialsRouter);
 router.use("/lookbook", lookbookRouter);
+router.use("/reviews", reviewsRouter);
+router.use("/promo", promoRouter);
 
 // Admin routes
 router.use("/admin/auth", adminAuthRouter);
@@ -44,5 +50,7 @@ router.use("/admin/analytics", adminAnalyticsRouter);
 router.use("/admin/content", adminContentRouter);
 router.use("/admin/lookbook", adminLookbookRouter);
 router.use("/admin/email-preview", adminEmailPreviewRouter);
+router.use("/admin/reviews", adminReviewsRouter);
+router.use("/admin/promo-codes", adminPromoCodesRouter);
 
 export default router;
