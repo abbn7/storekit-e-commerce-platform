@@ -2,6 +2,8 @@ import express, { type Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
+import path from "path";
+import fs from "fs";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import {
@@ -19,16 +21,10 @@ app.use(
     logger,
     serializers: {
       req(req) {
-        return {
-          id: req.id,
-          method: req.method,
-          url: req.url?.split("?")[0],
-        };
+        return { id: req.id, method: req.method, url: req.url?.split("?")[0] };
       },
       res(res) {
-        return {
-          statusCode: res.statusCode,
-        };
+        return { statusCode: res.statusCode };
       },
     },
   }),
@@ -51,5 +47,18 @@ app.use(
 );
 
 app.use("/api", router);
+
+// ── Serve built frontend in production ──────────────────────────────────────
+// Set FRONTEND_DIST env var to the path of the built frontend (e.g. ./public)
+// This lets the Docker image serve both API + frontend from a single process.
+const frontendDist = process.env.FRONTEND_DIST;
+if (frontendDist && fs.existsSync(frontendDist)) {
+  logger.info({ frontendDist }, "Serving static frontend");
+  app.use(express.static(frontendDist, { maxAge: "1y", immutable: true }));
+  // SPA fallback — all non-API routes go to index.html
+  app.get("*", (_req, res) => {
+    res.sendFile(path.resolve(frontendDist, "index.html"));
+  });
+}
 
 export default app;

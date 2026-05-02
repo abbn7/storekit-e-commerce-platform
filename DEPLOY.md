@@ -1,6 +1,6 @@
 # StoreKit — دليل النشر الكامل
 
-## كلمة سر الداشبورد
+## كلمة سر الداشبورد الافتراضية
 ```
 storekit2024
 ```
@@ -8,164 +8,136 @@ storekit2024
 
 ---
 
-## النشر على Replit (الأسهل — موصى به)
+## 🐳 النشر بـ Docker (الأسهل لأي خادم أو VPS)
 
-Replit هو الخيار الأسهل لأن قاعدة البيانات (PostgreSQL) والبيئة كلها موجودة بالفعل.
+هذه الطريقة مستقلة 100% عن Replit وتعمل على أي جهاز أو خادم.
 
-### خطوات النشر من أي جهاز (موبايل أو كمبيوتر):
+### المتطلبات:
+- [Docker](https://docs.docker.com/get-docker/) مثبت
+- [Docker Compose](https://docs.docker.com/compose/install/) مثبت
 
-1. افتح المشروع على [replit.com](https://replit.com)
-2. اضغط على زر **Deploy** في الشريط العلوي
-3. اختر **Autoscale** أو **Reserved VM**
-4. اضغط **Deploy** — وخلاص ✅
+### الخطوات:
 
-**متغيرات البيئة المطلوبة للإنتاج:**
-| المتغير | الوصف |
-|---------|-------|
-| `SESSION_SECRET` | مفتاح عشوائي طويل (موجود بالفعل) |
-| `DATABASE_URL` | رابط PostgreSQL (موجود بالفعل في Replit) |
-| `VITE_CLERK_PUBLISHABLE_KEY` | من dashboard.clerk.com |
-| `CLERK_SECRET_KEY` | من dashboard.clerk.com |
-| `STRIPE_SECRET_KEY` | من dashboard.stripe.com |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | من dashboard.stripe.com |
-| `ADMIN_PASSWORD` | كلمة سر الداشبورد (حالياً: storekit2024) |
+```bash
+# 1. استنزل ملفات المشروع
+git clone <your-repo-url> storekit
+cd storekit
 
----
+# 2. شغّل سكريبت الإعداد التلقائي
+bash setup.sh
 
-## النشر على Vercel من الآيفون 📱
-
-### المتطلبات الأولية:
-- حساب على [GitHub](https://github.com) (مجاني)
-- حساب على [Vercel](https://vercel.com) (مجاني)
-- حساب على [Neon](https://neon.tech) لقاعدة البيانات (مجاني)
-
----
-
-### الخطوة 1 — رفع المشروع على GitHub
-
-#### من الآيفون:
-1. افتح [github.com](https://github.com) في Safari
-2. سجّل دخولك
-3. اضغط **+** ثم **New repository**
-4. اسم المشروع: `storekit`
-5. اختر **Private** (سري)
-6. اضغط **Create repository**
-7. ارجع للـ Replit → اضغط على **Git** في الشريط الجانبي
-8. اربط بالـ repository الجديد وادفع الكود
-
----
-
-### الخطوة 2 — إنشاء قاعدة بيانات PostgreSQL على Neon
-
-1. افتح [neon.tech](https://neon.tech) من Safari
-2. اضغط **Sign Up** بحساب Google
-3. اضغط **Create Project**
-4. اسم المشروع: `storekit-db`
-5. اختر Region قريبة منك
-6. اضغط **Create Project**
-7. انسخ **Connection String** — يبدو هكذا:
-   ```
-   postgresql://user:password@host.neon.tech/dbname?sslmode=require
-   ```
-8. احتفظ بهذا الرابط — ستحتاجه في الخطوة 4
-
----
-
-### الخطوة 3 — إعداد Clerk للإنتاج
-
-1. افتح [dashboard.clerk.com](https://dashboard.clerk.com)
-2. افتح مشروعك (أو أنشئ جديداً)
-3. من القائمة الجانبية: **API Keys**
-4. انسخ:
-   - **Publishable Key** يبدأ بـ `pk_live_...`
-   - **Secret Key** يبدأ بـ `sk_live_...`
-5. من **Domains**: أضف نطاق Vercel بعد النشر (مثل `storekit.vercel.app`)
-
----
-
-### الخطوة 4 — النشر على Vercel
-
-1. افتح [vercel.com](https://vercel.com) من Safari
-2. اضغط **Sign Up** → **Continue with GitHub**
-3. اضغط **Add New Project**
-4. اختر repository الـ `storekit`
-5. في إعدادات المشروع:
-   - **Framework Preset**: Other
-   - **Root Directory**: `.` (اتركه كما هو)
-   - **Build Command**: `pnpm install && pnpm --filter @workspace/storekit build`
-   - **Output Directory**: `artifacts/storekit/dist/public`
-   - **Install Command**: `pnpm install`
-
-6. اضغط **Environment Variables** وأضف:
-
-| Key | Value |
-|-----|-------|
-| `DATABASE_URL` | رابط Neon من الخطوة 2 |
-| `SESSION_SECRET` | أي نص عشوائي طويل (30+ حرف) |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Publishable Key من Clerk |
-| `CLERK_SECRET_KEY` | Secret Key من Clerk |
-| `ADMIN_PASSWORD` | `storekit2024` أو كلمة سرك |
-| `NODE_ENV` | `production` |
-| `BASE_PATH` | `/` |
-
-7. اضغط **Deploy** 🚀
-
----
-
-### الخطوة 5 — تشغيل migrations على Neon
-
-بعد النشر، تحتاج إنشاء الجداول في قاعدة البيانات:
-
-1. افتح [neon.tech](https://neon.tech) → مشروعك
-2. اضغط **SQL Editor**
-3. الصق هذا الأمر لتشغيل الـ migrations:
-
-```sql
--- هذا سيُنفَّذ تلقائياً عند أول تشغيل للتطبيق
--- أو يمكنك تشغيل migrations يدوياً عبر:
--- pnpm --filter @workspace/db run db:migrate
+# 3. خلاص — المتجر شغّال على http://localhost
 ```
 
-> الأفضل: شغّل من Replit terminal:
-> ```bash
-> DATABASE_URL="your-neon-url" pnpm --filter @workspace/db run db:migrate
-> ```
+**أو يدوياً:**
+
+```bash
+cp .env.example .env
+# عدّل .env وضع POSTGRES_PASSWORD و SESSION_SECRET
+docker compose up -d --build
+```
+
+### الوصول:
+| الرابط | الوصف |
+|--------|-------|
+| `http://localhost` | المتجر |
+| `http://localhost/admin` | الداشبورد |
+| `http://localhost/api/healthz` | حالة الـ API |
+
+### إيقاف / تشغيل:
+```bash
+docker compose down         # إيقاف
+docker compose up -d        # تشغيل مرة أخرى
+docker compose logs -f app  # مشاهدة اللوجز
+```
 
 ---
 
-### الخطوة 6 — تأكيد النشر
+## ☁️ النشر على Replit (الأسرع)
 
-1. بعد انتهاء Vercel من البناء، ستحصل على رابط مثل:
-   ```
-   https://storekit-xxx.vercel.app
-   ```
-2. افتح الرابط من Safari
-3. الداشبورد: `https://your-app.vercel.app/admin`
-4. كلمة السر: `storekit2024`
+Replit هو الخيار الأسهل لأن قاعدة البيانات والبيئة كلها موجودة بالفعل.
 
----
-
-## إعادة النشر عند التحديث
-
-في كل مرة تعدّل الكود وترفعه على GitHub، سيقوم Vercel بإعادة البناء تلقائياً خلال دقيقتين.
+1. افتح المشروع على [replit.com](https://replit.com)
+2. اضغط **Deploy** في الشريط العلوي
+3. اختر **Autoscale** أو **Reserved VM**
+4. اضغط **Deploy** ✅
 
 ---
 
-## Code Review — ملاحظات مهمة
+## 🚀 النشر على Railway (VPS سحابي — مجاني جزئياً)
 
-### ✅ ما تم إصلاحه:
-- **vite.config.ts**: لم يعد يتطلب `PORT` عند البناء (كانت تسبب فشل البناء)
-- **404 page**: تصميم فاخر بدلاً من الصفحة البدائية
-- **Dark mode**: تبديل كامل مع حفظ في localStorage
-- **Arabic support**: ترجمة كاملة مع RTL
-- **Build chunks**: تقسيم vendor/clerk/i18n لأداء أفضل
-
-### ⚠️ ملاحظات للإنتاج:
-- غيّر `ADMIN_PASSWORD` إلى كلمة سر قوية
-- استخدم Clerk Production keys (ليس Development)
-- تأكد من SSL على قاعدة البيانات (`?sslmode=require`)
-- أضف `STRIPE_SECRET_KEY` للدفع الحقيقي
+1. افتح [railway.app](https://railway.app)
+2. **New Project → Deploy from GitHub**
+3. أضف **PostgreSQL** service
+4. في إعدادات المشروع أضف متغيرات البيئة من `.env.example`
+5. **Build Command:** `pnpm install && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/storekit build`
+6. **Start Command:** `node --enable-source-maps artifacts/api-server/dist/index.mjs`
 
 ---
 
-*آخر تحديث: مايو 2025*
+## 🌐 النشر على Render
+
+1. افتح [render.com](https://render.com) → **New Web Service**
+2. اربط GitHub repo
+3. **Build Command:** `npm install -g pnpm && pnpm install && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/storekit build`
+4. **Start Command:** `FRONTEND_DIST=artifacts/storekit/dist/public node --enable-source-maps artifacts/api-server/dist/index.mjs`
+5. أضف **PostgreSQL** database من Render
+6. أضف متغيرات البيئة
+
+---
+
+## 📱 النشر على Vercel (Frontend فقط)
+
+> **ملاحظة:** Vercel مناسب للـ frontend فقط. الـ API يحتاج نشر منفصل على Railway أو Render.
+
+1. افتح [vercel.com](https://vercel.com)
+2. **Add New Project → GitHub**
+3. **Framework:** Other
+4. **Build Command:** `pnpm install && pnpm --filter @workspace/storekit build`
+5. **Output Directory:** `artifacts/storekit/dist/public`
+
+---
+
+## متغيرات البيئة المطلوبة
+
+| المتغير | الوصف | مطلوب |
+|---------|-------|--------|
+| `DATABASE_URL` | رابط PostgreSQL | ✅ |
+| `SESSION_SECRET` | مفتاح عشوائي طويل | ✅ |
+| `ADMIN_PASSWORD` | كلمة سر الداشبورد | ✅ |
+| `POSTGRES_PASSWORD` | كلمة سر PostgreSQL (Docker فقط) | ✅ Docker |
+| `CLERK_PUBLISHABLE_KEY` | من [dashboard.clerk.com](https://dashboard.clerk.com) | اختياري |
+| `CLERK_SECRET_KEY` | من [dashboard.clerk.com](https://dashboard.clerk.com) | اختياري |
+| `STRIPE_SECRET_KEY` | من [dashboard.stripe.com](https://dashboard.stripe.com) | اختياري |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | من [dashboard.stripe.com](https://dashboard.stripe.com) | اختياري |
+| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | إعدادات الإيميل | اختياري |
+| `UPLOAD_DIR` | مجلد حفظ صور المنتجات | اختياري |
+| `FRONTEND_DIST` | مسار الـ frontend المبني | Docker/Production |
+
+---
+
+## تشغيل الـ Migrations
+
+```bash
+# على Docker:
+docker compose exec app node -e "require('./dist/index.mjs')"
+
+# محلياً:
+pnpm --filter @workspace/db run push
+
+# على Neon/Supabase: شغّل الـ SQL من lib/db/migrations/
+```
+
+---
+
+## ملاحظات مهمة للإنتاج
+
+- ✅ غيّر `ADMIN_PASSWORD` إلى كلمة سر قوية
+- ✅ استخدم Clerk **Production** keys (ليس Development)
+- ✅ تأكد من SSL على قاعدة البيانات (`?sslmode=require`)
+- ✅ احفظ مجلد `uploads/` خارج الـ container (volume) لعدم فقدان الصور
+- ✅ استخدم `SESSION_SECRET` عشوائي وطويل (64+ حرف)
+
+---
+
+*آخر تحديث: مايو 2026*

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "wouter";
 import Layout from "@/components/Layout";
@@ -36,7 +36,69 @@ function Skeleton() {
   );
 }
 
-/* ── Social Proof Badge ──────────────────────────────────── */
+/* ── Urgency Countdown ───────────────────────────────────────── */
+function UrgencyCountdown({ stock }: { stock: number }) {
+  // Count down to end of business day (cut-off for same-day dispatch)
+  const getSecondsLeft = useCallback(() => {
+    const now = new Date();
+    const cutoff = new Date();
+    cutoff.setHours(17, 0, 0, 0); // 5 PM cut-off
+    if (now >= cutoff) cutoff.setDate(cutoff.getDate() + 1);
+    return Math.max(0, Math.floor((cutoff.getTime() - now.getTime()) / 1000));
+  }, []);
+
+  const [secs, setSecs] = useState(getSecondsLeft);
+
+  useEffect(() => {
+    const t = setInterval(() => setSecs(getSecondsLeft()), 1000);
+    return () => clearInterval(t);
+  }, [getSecondsLeft]);
+
+  const h = String(Math.floor(secs / 3600)).padStart(2, "0");
+  const m = String(Math.floor((secs % 3600) / 60)).padStart(2, "0");
+  const s = String(secs % 60).padStart(2, "0");
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + (new Date().getHours() >= 17 ? 2 : 1));
+  const dispatchDay = tomorrow.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+
+  if (stock === 0) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -4 }}
+      transition={{ duration: 0.35 }}
+      className="flex flex-wrap items-center gap-3 text-xs mb-4 p-3 border border-border bg-muted/40"
+    >
+      {stock <= 3 ? (
+        <>
+          <motion.span
+            animate={{ opacity: [1, 0.4, 1] }}
+            transition={{ duration: 1.6, repeat: Infinity }}
+            className="inline-flex w-2 h-2 rounded-full bg-red-500 flex-shrink-0"
+          />
+          <span className="text-foreground font-medium">
+            Only {stock} left in this size — selling fast
+          </span>
+        </>
+      ) : (
+        <>
+          <span className="text-muted-foreground">
+            Order in{" "}
+            <span className="font-mono font-semibold text-foreground tabular-nums">
+              {h}:{m}:{s}
+            </span>
+            {" "}for dispatch by <span className="font-medium text-foreground">{dispatchDay}</span>
+          </span>
+        </>
+      )}
+    </motion.div>
+  );
+}
+
+/* ── Social Proof Badge ──────────────────────────────────────── */
 function SocialProof({ productId }: { productId: string }) {
   const [count] = useState(() => {
     // Deterministic "random" based on product ID characters
@@ -407,6 +469,13 @@ export default function ProductDetailPage() {
                   </motion.div>
                 </motion.button>
               </div>
+
+              {/* Urgency countdown — dispatch timer & low-stock alert */}
+              <AnimatePresence>
+                {selectedVariant && isInStock && (
+                  <UrgencyCountdown stock={selectedVariant.stock ?? 0} />
+                )}
+              </AnimatePresence>
 
               {/* Notify Me — shown when a variant is out of stock */}
               <AnimatePresence>

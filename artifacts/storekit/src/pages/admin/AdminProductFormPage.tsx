@@ -7,11 +7,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Star } from "lucide-react";
-import ImageUploadButton from "@/components/admin/ImageUploadButton";
+import { Plus, Trash2 } from "lucide-react";
+import AdminImageUploader, { type ImageField } from "@/components/admin/AdminImageUploader";
 
 interface Variant { size: string; color: string; colorHex: string; sku: string; stock: number; price: number; compareAtPrice?: number; }
-interface ImageField { url: string; alt: string; isPrimary: boolean; sortOrder: number; }
+
+let _uid = 0;
+function uid() { return `img-${Date.now()}-${_uid++}`; }
 
 export default function AdminProductFormPage() {
   useAdminGuard();
@@ -38,7 +40,7 @@ export default function AdminProductFormPage() {
   const [careInstructions, setCareInstructions] = useState("");
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [tags, setTags] = useState("");
-  const [images, setImages] = useState<ImageField[]>([{ url: "", alt: "", isPrimary: true, sortOrder: 0 }]);
+  const [images, setImages] = useState<ImageField[]>([]);
   const [variants, setVariants] = useState<Variant[]>([{ size: "S", color: "Black", colorHex: "#1a1a1a", sku: "", stock: 10, price: 0 }]);
   const [saving, setSaving] = useState(false);
 
@@ -57,17 +59,28 @@ export default function AdminProductFormPage() {
       setCareInstructions(existing.careInstructions ?? "");
       setCollectionIds(existing.collectionIds ?? []);
       setTags((existing.tags ?? []).join(", "));
-      if (existing.images?.length) setImages(existing.images.map((img: any) => ({ url: img.url, alt: img.alt ?? "", isPrimary: img.isPrimary ?? false, sortOrder: img.sortOrder ?? 0 })));
-      if (existing.variants?.length) setVariants(existing.variants.map((v: any) => ({ size: v.size, color: v.color, colorHex: v.colorHex ?? "#000", sku: v.sku, stock: v.stock ?? 0, price: v.price / 100, compareAtPrice: v.compareAtPrice ? v.compareAtPrice / 100 : undefined })));
+      if (existing.images?.length) {
+        setImages(existing.images.map((img: any) => ({
+          id: uid(),
+          url: img.url,
+          alt: img.alt ?? "",
+          isPrimary: img.isPrimary ?? false,
+          sortOrder: img.sortOrder ?? 0,
+        })));
+      }
+      if (existing.variants?.length) {
+        setVariants(existing.variants.map((v: any) => ({
+          size: v.size, color: v.color, colorHex: v.colorHex ?? "#000",
+          sku: v.sku, stock: v.stock ?? 0,
+          price: v.price / 100,
+          compareAtPrice: v.compareAtPrice ? v.compareAtPrice / 100 : undefined,
+        })));
+      }
     }
   }, [existing]);
 
   function autoSlug(n: string) {
     if (!isEdit) setSlug(n.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""));
-  }
-
-  function updateImageUrl(i: number, url: string) {
-    setImages(imgs => imgs.map((im, idx) => idx === i ? { ...im, url } : im));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -80,8 +93,12 @@ export default function AdminProductFormPage() {
       status: status as any, isFeatured, isNewArrival, material, careInstructions,
       collectionIds,
       tags: tags.split(",").map(t => t.trim()).filter(Boolean),
-      images: images.filter(i => i.url),
-      variants: variants.map(v => ({ ...v, price: Math.round(v.price * 100), compareAtPrice: v.compareAtPrice ? Math.round(v.compareAtPrice * 100) : undefined })),
+      images: images.map(({ url, alt, isPrimary, sortOrder }) => ({ url, alt, isPrimary, sortOrder })),
+      variants: variants.map(v => ({
+        ...v,
+        price: Math.round(v.price * 100),
+        compareAtPrice: v.compareAtPrice ? Math.round(v.compareAtPrice * 100) : undefined,
+      })),
     };
     try {
       if (isEdit) {
@@ -92,7 +109,7 @@ export default function AdminProductFormPage() {
         toast({ title: "Product created" });
         setLocation("/admin/products");
       }
-    } catch (err) {
+    } catch {
       toast({ title: "Error saving product", variant: "destructive" });
     }
     setSaving(false);
@@ -172,73 +189,10 @@ export default function AdminProductFormPage() {
           </div>
         </section>
 
-        {/* Images */}
-        <section className="bg-card border border-border p-6 space-y-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium tracking-wide">Images</h2>
-            <button type="button" onClick={() => setImages(imgs => [...imgs, { url: "", alt: "", isPrimary: false, sortOrder: imgs.length }])} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-              <Plus className="w-4 h-4" /> Add Image
-            </button>
-          </div>
-
-          {images.map((img, i) => (
-            <div key={i} className="border border-border p-4 space-y-3">
-              {/* Row: image preview + fields */}
-              <div className="flex gap-4 items-start">
-                {/* Preview */}
-                <div className="w-20 h-24 flex-shrink-0 bg-muted border border-border overflow-hidden">
-                  {img.url
-                    ? <img src={img.url} alt={img.alt || "preview"} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                    : <div className="w-full h-full flex items-center justify-center text-muted-foreground/30 text-xs text-center px-1">No image</div>
-                  }
-                </div>
-
-                {/* Fields */}
-                <div className="flex-1 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="col-span-2 space-y-1.5">
-                      <Label className="text-xs">Image URL</Label>
-                      <Input
-                        value={img.url}
-                        onChange={e => updateImageUrl(i, e.target.value)}
-                        placeholder="https://..."
-                        className="text-xs"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Alt Text</Label>
-                      <Input value={img.alt} onChange={e => setImages(imgs => imgs.map((im, idx) => idx === i ? { ...im, alt: e.target.value } : im))} className="text-xs" />
-                    </div>
-                    <div className="flex items-end gap-2">
-                      <label className="flex items-center gap-2 text-xs cursor-pointer mb-1">
-                        <input
-                          type="radio"
-                          name="primaryImage"
-                          checked={img.isPrimary}
-                          onChange={() => setImages(imgs => imgs.map((im, idx) => ({ ...im, isPrimary: idx === i })))}
-                        />
-                        <Star className="w-3.5 h-3.5 text-accent" />
-                        Primary
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Upload button */}
-                  <ImageUploadButton
-                    label="Upload from device"
-                    onSuccess={(url) => updateImageUrl(i, url)}
-                  />
-                </div>
-              </div>
-
-              {/* Remove */}
-              {i > 0 && (
-                <button type="button" onClick={() => setImages(imgs => imgs.filter((_, idx) => idx !== i))} className="text-destructive/70 hover:text-destructive text-xs flex items-center gap-1">
-                  <Trash2 className="w-3.5 h-3.5" /> Remove image
-                </button>
-              )}
-            </div>
-          ))}
+        {/* Images — drag & drop uploader */}
+        <section className="bg-card border border-border p-6 space-y-4">
+          <h2 className="text-sm font-medium tracking-wide">Product Images</h2>
+          <AdminImageUploader images={images} onChange={setImages} />
         </section>
 
         {/* Variants */}
@@ -251,7 +205,7 @@ export default function AdminProductFormPage() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead><tr className="border-b border-border">{["Size", "Color", "Hex", "SKU", "Stock", "Price ($)", ""].map(h => <th key={h} className="text-left text-xs text-muted-foreground pb-2 pr-2">{h}</th>)}</tr></thead>
+              <thead><tr className="border-b border-border">{["Size", "Color", "Hex", "SKU", "Stock", "Price ($)", "Compare ($)", ""].map(h => <th key={h} className="text-left text-xs text-muted-foreground pb-2 pr-2">{h}</th>)}</tr></thead>
               <tbody>
                 {variants.map((v, i) => (
                   <tr key={i} className="border-b border-border">
@@ -262,6 +216,7 @@ export default function AdminProductFormPage() {
                       <Input key="sku" value={v.sku} onChange={e => setVariants(vs => vs.map((vv, idx) => idx === i ? { ...vv, sku: e.target.value } : vv))} className="h-8 text-xs" />,
                       <Input key="stock" type="number" value={v.stock} onChange={e => setVariants(vs => vs.map((vv, idx) => idx === i ? { ...vv, stock: parseInt(e.target.value) || 0 } : vv))} className="h-8 text-xs w-20" />,
                       <Input key="price" type="number" step="0.01" value={v.price} onChange={e => setVariants(vs => vs.map((vv, idx) => idx === i ? { ...vv, price: parseFloat(e.target.value) || 0 } : vv))} className="h-8 text-xs w-24" />,
+                      <Input key="compare" type="number" step="0.01" value={v.compareAtPrice ?? ""} onChange={e => setVariants(vs => vs.map((vv, idx) => idx === i ? { ...vv, compareAtPrice: e.target.value ? parseFloat(e.target.value) : undefined } : vv))} className="h-8 text-xs w-24" placeholder="—" />,
                     ].map((cell, j) => <td key={j} className="py-2 pr-2">{cell}</td>)}
                     <td className="py-2">
                       {variants.length > 1 && (

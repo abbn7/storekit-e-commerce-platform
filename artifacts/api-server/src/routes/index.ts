@@ -25,10 +25,12 @@ import adminReviewsRouter from "./admin/reviews";
 import adminPromoCodesRouter from "./admin/promo-codes";
 import stockAlertsRouter from "./stock-alerts";
 import adminStockAlertsRouter from "./admin/stock-alerts";
+import uploadsRouter from "./uploads";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(uploadsRouter);
 router.use(storageRouter);
 router.use("/store-config", storeConfigRouter);
 router.use("/products", productsRouter);

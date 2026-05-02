@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  # ── PostgreSQL database ─────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-storekit}
+      POSTGRES_USER: ${POSTGRES_USER:-storekit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-storekit}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── StoreKit app (API + frontend) ───────────────────────────────────────────
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${PORT:-80}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: "8080"
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-storekit}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-storekit}
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-storekit2024}
+      CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY:-}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-noreply@yourdomain.com}
+      UPLOAD_DIR: /app/uploads
+      FRONTEND_DIST: /app/public
+    volumes:
+      - uploads_data:/app/uploads
+
+volumes:
+  postgres_data:
+  uploads_data:

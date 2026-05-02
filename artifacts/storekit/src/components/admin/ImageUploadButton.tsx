@@ -19,38 +19,28 @@ export default function ImageUploadButton({ onSuccess, accept = "image/*", label
   async function handleFile(file: File) {
     if (!file) return;
     setState("uploading");
-    setProgress(10);
+    setProgress(20);
     setErrorMsg("");
 
     try {
-      // Step 1: Request presigned URL
-      const metaRes = await fetch("/api/storage/uploads/request-url", {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      setProgress(50);
+      const res = await fetch("/api/uploads", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+        body: formData,
       });
-      if (!metaRes.ok) throw new Error("Failed to get upload URL");
-      const { uploadURL, objectPath } = await metaRes.json();
-      setProgress(30);
 
-      // Step 2: Upload directly to GCS
-      const uploadRes = await fetch(uploadURL, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      if (!uploadRes.ok) throw new Error("Upload failed");
-      setProgress(90);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error ?? "Upload failed");
+      }
 
-      // Step 3: Return serving URL (objectPath = /objects/{id})
-      // Serving endpoint: GET /api/storage/objects/{id}
-      const id = objectPath.replace(/^\/objects\//, "");
-      const servingUrl = `/api/storage/objects/${id}`;
-      onSuccess(servingUrl);
+      const { url } = await res.json();
       setProgress(100);
+      onSuccess(url);
       setState("done");
-
-      // Reset after 2s
       setTimeout(() => setState("idle"), 2000);
     } catch (err: any) {
       setErrorMsg(err.message ?? "Upload failed");
@@ -111,7 +101,6 @@ export default function ImageUploadButton({ onSuccess, accept = "image/*", label
         </span>
       </motion.button>
 
-      {/* Progress bar */}
       <AnimatePresence>
         {state === "uploading" && (
           <motion.div
