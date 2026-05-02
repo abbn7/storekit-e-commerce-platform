@@ -38,6 +38,8 @@ import AdminContentPage from "@/pages/admin/AdminContentPage";
 import AdminAnalyticsPage from "@/pages/admin/AdminAnalyticsPage";
 import CartDrawer from "@/components/CartDrawer";
 import QuickViewModal from "@/components/QuickViewModal";
+import CompareBar from "@/components/CompareBar";
+import CompareModal from "@/components/CompareModal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -112,6 +114,8 @@ function ClerkAwareRouter() {
       <AnimatedRoutes />
       <CartDrawer />
       <QuickViewModal />
+      <CompareBar />
+      <CompareModal />
     </ClerkProvider>
   );
 }

@@ -1,11 +1,12 @@
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, ShoppingBag, Eye } from "lucide-react";
+import { Heart, ShoppingBag, Eye, ArrowLeftRight } from "lucide-react";
 import { useState } from "react";
 import { formatPrice, getProductImage } from "@/lib/utils";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useCartStore } from "@/store/cartStore";
 import { useQuickViewStore } from "@/store/quickViewStore";
+import { useCompareStore } from "@/store/compareStore";
 import { luxury, staggerItem } from "@/lib/animations";
 
 interface ProductCardProps {
@@ -32,7 +33,10 @@ export default function ProductCard({
   const { isInWishlist, addItem: addToWishlist, removeItem: removeFromWishlist } = useWishlistStore();
   const { addItem, openCart } = useCartStore();
   const { open: openQuickView } = useQuickViewStore();
+  const { add: addToCompare, remove: removeFromCompare, isInCompare, items: compareItems } = useCompareStore();
   const inWishlist = isInWishlist(id);
+  const inCompare = isInCompare(id);
+  const compareIsFull = compareItems.length >= 3 && !inCompare;
 
   const primaryImage = images[0]?.url ? getProductImage(images[0].url) : getProductImage(null, id);
   const secondaryImage = images[1]?.url ? getProductImage(images[1].url) : primaryImage;
@@ -263,11 +267,41 @@ export default function ProductCard({
               />
             </span>
           </h3>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">{formatPrice(basePrice)}</span>
-            {hasDiscount && (
-              <span className="text-sm text-muted-foreground line-through">{formatPrice(compareAtPrice!)}</span>
-            )}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">{formatPrice(basePrice)}</span>
+              {hasDiscount && (
+                <span className="text-sm text-muted-foreground line-through">{formatPrice(compareAtPrice!)}</span>
+              )}
+            </div>
+
+            {/* Compare toggle */}
+            <AnimatePresence>
+              {isHovered && (
+                <motion.button
+                  initial={{ opacity: 0, x: 8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 8 }}
+                  transition={{ duration: 0.2, ease: luxury }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (inCompare) removeFromCompare(id);
+                    else if (!compareIsFull) addToCompare({ id, slug, name, basePrice, compareAtPrice, images, variants, isFeatured, isNewArrival });
+                  }}
+                  disabled={compareIsFull}
+                  title={compareIsFull ? "Max 3 items" : inCompare ? "Remove from compare" : "Add to compare"}
+                  className={`flex items-center gap-1 text-[10px] tracking-wide transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                    inCompare
+                      ? "text-accent"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <ArrowLeftRight className="w-3 h-3" />
+                  {inCompare ? "Added" : "Compare"}
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </Link>
