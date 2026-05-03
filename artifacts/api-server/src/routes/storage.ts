@@ -4,7 +4,15 @@ import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 
 const router: IRouter = Router();
-const objectStorageService = new ObjectStorageService();
+
+// Lazy — only instantiated when a storage route is actually hit.
+// On Railway (no Replit sidecar) the constructor itself is fine; errors
+// surface only when bucket methods are called, which is what we want.
+let _objectStorageService: ObjectStorageService | null = null;
+function getObjectStorageService(): ObjectStorageService {
+  if (!_objectStorageService) _objectStorageService = new ObjectStorageService();
+  return _objectStorageService;
+}
 
 const RequestUploadUrlBody = z.object({
   name: z.string(),
@@ -31,8 +39,9 @@ router.post("/storage/uploads/request-url", async (req: Request, res: Response) 
 
   try {
     const { name, size, contentType } = parsed.data;
-    const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-    const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+    const service = getObjectStorageService();
+    const uploadURL = await service.getObjectEntityUploadURL();
+    const objectPath = service.normalizeObjectEntityPath(uploadURL);
 
     res.json(
       RequestUploadUrlResponse.parse({
@@ -41,7 +50,11 @@ router.post("/storage/uploads/request-url", async (req: Request, res: Response) 
         metadata: { name, size, contentType },
       }),
     );
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message?.includes("only available on Replit")) {
+      res.status(503).json({ error: "Storage service is only available on Replit. Please use local uploads on Railway." });
+      return;
+    }
     req.log.error({ err: error }, "Error generating upload URL");
     res.status(500).json({ error: "Failed to generate upload URL" });
   }
@@ -55,12 +68,13 @@ router.get("/storage/public-objects/*filePath", async (req: Request, res: Respon
   try {
     const raw = req.params.filePath;
     const filePath = Array.isArray(raw) ? raw.join("/") : raw;
-    const file = await objectStorageService.searchPublicObject(filePath);
+    const service = getObjectStorageService();
+    const file = await service.searchPublicObject(filePath);
     if (!file) {
       res.status(404).json({ error: "File not found" });
       return;
     }
-    const response = await objectStorageService.downloadObject(file);
+    const response = await service.downloadObject(file);
     res.setHeader("Content-Type", response.headers.get("Content-Type") ?? "application/octet-stream");
     res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     if (response.body) {
@@ -68,7 +82,11 @@ router.get("/storage/public-objects/*filePath", async (req: Request, res: Respon
     } else {
       res.end();
     }
-  } catch (err) {
+  } catch (err: any) {
+    if (err.message?.includes("only available on Replit")) {
+      res.status(503).json({ error: "Storage service is only available on Replit." });
+      return;
+    }
     req.log.error({ err }, "Error serving public object");
     res.status(500).json({ error: "Failed to serve file" });
   }
@@ -81,8 +99,9 @@ router.get("/storage/public-objects/*filePath", async (req: Request, res: Respon
 router.get("/storage/objects/:objectId", async (req: Request, res: Response) => {
   const { objectId } = req.params;
   try {
-    const file = await objectStorageService.getObjectEntityFile(`/objects/${objectId}`);
-    const response = await objectStorageService.downloadObject(file, 3600);
+    const service = getObjectStorageService();
+    const file = await service.getObjectEntityFile(`/objects/${objectId}`);
+    const response = await service.downloadObject(file, 3600);
     res.setHeader("Content-Type", response.headers.get("Content-Type") ?? "application/octet-stream");
     res.setHeader("Cache-Control", "public, max-age=3600");
     if (response.body) {
@@ -90,7 +109,11 @@ router.get("/storage/objects/:objectId", async (req: Request, res: Response) => 
     } else {
       res.end();
     }
-  } catch (err) {
+  } catch (err: any) {
+    if (err.message?.includes("only available on Replit")) {
+      res.status(503).json({ error: "Storage service is only available on Replit." });
+      return;
+    }
     if (err instanceof ObjectNotFoundError) {
       res.status(404).json({ error: "Object not found" });
     } else {

@@ -11,22 +11,55 @@ import {
 
 const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
 
-export const objectStorageClient = new Storage({
-  credentials: {
-    audience: "replit",
-    subject_token_type: "access_token",
-    token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
-    type: "external_account",
-    credential_source: {
-      url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
-      format: {
-        type: "json",
-        subject_token_field_name: "access_token",
+/**
+ * Returns true only when running inside a Replit environment.
+ * On Railway / Docker the sidecar is never present.
+ */
+function isReplitEnv(): boolean {
+  return !!process.env.REPL_ID || !!process.env.REPLIT_DEPLOYMENT;
+}
+
+/**
+ * Lazy-initialised GCS Storage client.
+ * Only created when a storage API is actually invoked so the server can
+ * start successfully on Railway (where the Replit sidecar is absent).
+ */
+let _storageClient: Storage | null = null;
+
+function getStorageClient(): Storage {
+  if (!isReplitEnv()) {
+    throw new Error(
+      "Object Storage is only available on Replit. " +
+      "On Railway, upload images via the /api/uploads endpoint (local disk) instead."
+    );
+  }
+  if (!_storageClient) {
+    _storageClient = new Storage({
+      credentials: {
+        audience: "replit",
+        subject_token_type: "access_token",
+        token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
+        type: "external_account",
+        credential_source: {
+          url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
+          format: {
+            type: "json",
+            subject_token_field_name: "access_token",
+          },
+        },
+        universe_domain: "googleapis.com",
       },
-    },
-    universe_domain: "googleapis.com",
+      projectId: "",
+    });
+  }
+  return _storageClient;
+}
+
+/** @deprecated — use getStorageClient() internally; kept for backward compat */
+export const objectStorageClient = new Proxy({} as Storage, {
+  get(_target, prop) {
+    return (getStorageClient() as any)[prop];
   },
-  projectId: "",
 });
 
 export class ObjectNotFoundError extends Error {
@@ -238,6 +271,11 @@ async function signObjectURL({
   method: "GET" | "PUT" | "DELETE" | "HEAD";
   ttlSec: number;
 }): Promise<string> {
+  if (!isReplitEnv()) {
+    throw new Error(
+      "signObjectURL is only available on Replit (requires the sidecar endpoint)."
+    );
+  }
   const request = {
     bucket_name: bucketName,
     object_name: objectName,
