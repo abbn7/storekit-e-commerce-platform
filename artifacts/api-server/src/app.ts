@@ -56,7 +56,7 @@ if (frontendDist && fs.existsSync(frontendDist)) {
   logger.info({ frontendDist }, "Serving static frontend");
   app.use(express.static(frontendDist, { maxAge: "1y", immutable: true }));
   // SPA fallback — all non-API routes go to index.html
-  app.get("*", (_req, res) => {
+  app.get("*path", (_req, res) => {
     res.sendFile(path.resolve(frontendDist, "index.html"));
   });
 }

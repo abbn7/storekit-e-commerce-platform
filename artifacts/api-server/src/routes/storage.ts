@@ -61,12 +61,12 @@ router.post("/storage/uploads/request-url", async (req: Request, res: Response) 
 });
 
 /**
- * GET /storage/public-objects/*
+ * GET /storage/public-objects/*path
  * Serve public assets unconditionally.
  */
-router.get("/storage/public-objects/*filePath", async (req: Request, res: Response) => {
+router.get("/storage/public-objects/*path", async (req: Request, res: Response) => {
   try {
-    const raw = req.params.filePath;
+    const raw = req.params.path;
     const filePath = Array.isArray(raw) ? raw.join("/") : raw;
     const service = getObjectStorageService();
     const file = await service.searchPublicObject(filePath);
