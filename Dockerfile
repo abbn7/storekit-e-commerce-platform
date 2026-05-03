@@ -58,28 +58,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libssl3 ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g pnpm@10
+# ── Copy node_modules from api-builder ──────────────────────────────────────
+# We copy the already-installed node_modules instead of re-running pnpm
+# install, because esbuild externalizes packages like @google-cloud/storage
+# and google-auth-library. A fresh --prod install in a workspace context can
+# fail to hoist those packages to /app/node_modules where Node.js resolves
+# them from /app/dist/index.mjs.  Copying the full node_modules from the
+# build stage (which already has a verified, working install) is simpler and
+# more reliable.
+COPY --from=api-builder /app/node_modules ./node_modules
 
-# Copy workspace manifests for production install
-COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
-COPY tsconfig.base.json ./
-COPY lib/db/package.json              ./lib/db/
-COPY lib/api-spec/package.json        ./lib/api-spec/
-COPY lib/api-zod/package.json         ./lib/api-zod/
-COPY lib/api-client-react/package.json ./lib/api-client-react/
-COPY artifacts/api-server/package.json ./artifacts/api-server/
-COPY artifacts/storekit/package.json   ./artifacts/storekit/
-COPY scripts/package.json             ./scripts/
+# Copy compiled API server bundle
+COPY --from=api-builder /app/artifacts/api-server/dist ./dist/
 
-RUN pnpm install --frozen-lockfile --prod
-
-# Copy compiled API
-COPY --from=api-builder  /app/artifacts/api-server/dist  ./dist/
-
-# Copy built frontend into ./public so Express serves it
+# Copy built frontend — Express serves it as static files
 COPY --from=frontend-builder /app/artifacts/storekit/dist/public ./public/
 
-# Uploads directory
+# Persistent uploads directory (mount a volume here in production)
 RUN mkdir -p /app/uploads
 
 EXPOSE 8080
